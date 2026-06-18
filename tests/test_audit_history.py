@@ -116,3 +116,27 @@ def test_previous_returns_none_for_first(tmp_audit):
     audit_history.save_history(h, tmp_audit)
     result = audit_history.previous_audit(tmp_audit / "202601011000")
     assert result is None
+
+
+import subprocess
+
+
+def test_cli_init(tmp_audit):
+    repo = tmp_audit.parent
+    result = subprocess.run(
+        ["python3", "scripts/audit_history.py", "init", str(repo), "--out", str(tmp_audit)],
+        capture_output=True, text=True, cwd=Path(__file__).resolve().parent.parent
+    )
+    assert result.returncode == 0
+    output_path = result.stdout.strip()
+    assert Path(output_path).exists()
+
+
+def test_cli_previous_no_prior(tmp_audit):
+    audit_dir = audit_history.init_audit(tmp_audit, repo="r", remote="")
+    result = subprocess.run(
+        ["python3", "scripts/audit_history.py", "previous", str(audit_dir)],
+        capture_output=True, text=True, cwd=Path(__file__).resolve().parent.parent
+    )
+    assert result.returncode == 0
+    assert result.stdout.strip() == ""

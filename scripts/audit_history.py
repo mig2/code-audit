@@ -126,3 +126,58 @@ def previous_audit(audit_dir):
     if prev_dir.exists():
         return prev_dir
     return None
+
+
+def migrate_audit(audit_root):
+    raise NotImplementedError("migrate not yet implemented")
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    p_init = sub.add_parser("init", help="Create new timestamped audit directory")
+    p_init.add_argument("repo_root", help="Path to the repository being audited")
+    p_init.add_argument("--out", required=True, help="Audit root directory (e.g. .audit)")
+
+    p_reg = sub.add_parser("register", help="Mark audit as complete")
+    p_reg.add_argument("audit_dir", help="Path to the timestamped audit directory")
+
+    p_prev = sub.add_parser("previous", help="Print path to previous complete audit")
+    p_prev.add_argument("audit_dir", help="Path to the current audit directory")
+
+    p_mig = sub.add_parser("migrate", help="Migrate flat .audit/ to timestamped layout")
+    p_mig.add_argument("audit_dir", help="Path to .audit/ directory to migrate")
+
+    args = ap.parse_args()
+
+    if args.cmd == "init":
+        repo_root = Path(args.repo_root)
+        remote = ""
+        try:
+            import subprocess as sp
+            r = sp.run(["git", "-C", str(repo_root), "remote", "get-url", "origin"],
+                       capture_output=True, text=True)
+            if r.returncode == 0:
+                remote = r.stdout.strip()
+        except FileNotFoundError:
+            pass
+        audit_dir = init_audit(Path(args.out), repo=str(repo_root), remote=remote)
+        print(audit_dir)
+
+    elif args.cmd == "register":
+        register_audit(Path(args.audit_dir))
+        print(f"registered {Path(args.audit_dir).name} as complete")
+
+    elif args.cmd == "previous":
+        prev = previous_audit(Path(args.audit_dir))
+        if prev:
+            print(prev)
+
+    elif args.cmd == "migrate":
+        migrate_audit(Path(args.audit_dir))
+
+
+if __name__ == "__main__":
+    main()
