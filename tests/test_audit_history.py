@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import audit_history
 
 
@@ -64,3 +65,24 @@ def test_init_no_baseline_on_first_run(tmp_audit):
     audit_history.init_audit(tmp_audit, repo="r", remote="")
     h = audit_history.load_history(tmp_audit)
     assert h["audits"][0]["baseline_from"] is None
+
+
+import pytest
+from conftest import write_audit  # noqa: E402
+
+
+def test_register_marks_complete(tmp_audit, sample_findings, sample_narrative, sample_profile):
+    audit_dir = audit_history.init_audit(tmp_audit, repo="/tmp/repo", remote="git@x")
+    write_audit(audit_dir, sample_findings, sample_narrative, sample_profile)
+    audit_history.register_audit(audit_dir)
+    h = audit_history.load_history(tmp_audit)
+    entry = h["audits"][-1]
+    assert entry["status"] == "complete"
+    assert entry["commit"] == "abc123def456"
+    assert entry["branch"] == "main"
+    assert entry["tier"] == "standard"
+
+
+def test_register_missing_dir_fails(tmp_audit):
+    with pytest.raises(SystemExit):
+        audit_history.register_audit(tmp_audit / "nonexistent")

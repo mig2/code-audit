@@ -64,3 +64,32 @@ def init_audit(audit_root, repo="", remote=""):
     save_history(history, audit_root)
 
     return audit_dir
+
+
+def register_audit(audit_dir):
+    audit_dir = Path(audit_dir)
+    audit_root = audit_dir.parent
+    dir_name = audit_dir.name
+
+    history = load_history(audit_root)
+    entry = None
+    for a in history["audits"]:
+        if a["id"] == dir_name:
+            entry = a
+            break
+    if entry is None:
+        sys.exit(f"audit {dir_name} not found in {audit_root / 'audit-history.json'}")
+
+    profile_p = audit_dir / "repo-profile.json"
+    if profile_p.exists():
+        profile = json.loads(profile_p.read_text())
+        entry["commit"] = profile.get("commit", "")
+        entry["branch"] = profile.get("branch", "")
+
+    narrative_p = audit_dir / "narrative.json"
+    if narrative_p.exists():
+        narrative = json.loads(narrative_p.read_text())
+        entry["tier"] = narrative.get("tier", "")
+
+    entry["status"] = "complete"
+    save_history(history, audit_root)
