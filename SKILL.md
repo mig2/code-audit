@@ -32,11 +32,15 @@ when their phase arrives (noted below).
 /code-audit [triage|standard|deep] [--only dim1,dim2] [--path SUBDIR] [--out DIR]
             [--no-install] [--offline] [--file-issues] [--baseline FILE]
 /code-audit compare <auditdir1> <auditdir2> [...]
+/code-audit migrate                   # move flat .audit/ to timestamped layout
 ```
 
 Default tier: `standard`. Default workspace: `.audit/` in the repo root (ensure it is
-gitignored; add to `.gitignore` if missing, after asking). `compare` mode: skip to
-`references/portfolio.md`.
+gitignored; add to `.gitignore` if missing, after asking). Each audit run is stored in a
+timestamped subdirectory (`.audit/YYYYMMDDHHMM/`); prior audits are preserved
+automatically. `compare` mode: skip to `references/portfolio.md`. `migrate` mode: run
+`python3 scripts/audit_history.py migrate .audit` to convert a flat `.audit/` from a
+previous audit into the timestamped layout.
 
 ## Tiers
 
@@ -56,14 +60,19 @@ Run phases in order. All scripts support `--help`. All write into the audit work
 ### Phase 0 — Preflight
 
 ```bash
+AUDIT_DIR=$(python3 scripts/audit_history.py init REPO --out .audit)
 python3 scripts/detect_repo.py REPO --out AUDIT_DIR
 ```
 
-Produces `repo-profile.json`: languages with LOC share, manifests, frameworks, build
-systems, VCS host, sub-projects, service-vs-library classification. Review it. If
-sub-projects were detected (monorepo), the audit is **per-project**: each sub-project
-gets its own `AUDIT_DIR/<project>/` with its own findings, baseline, and report, plus a
-repo-level rollup. Run subsequent phases once per project (scripts accept
+`audit_history.py init` creates a timestamped directory (e.g. `.audit/202606181200/`),
+registers it in `.audit/audit-history.json`, and auto-links the baseline to the most
+recent completed audit. Use the returned path as `AUDIT_DIR` for all subsequent phases.
+
+`detect_repo.py` produces `repo-profile.json`: languages with LOC share, manifests,
+frameworks, build systems, VCS host, sub-projects, service-vs-library classification.
+Review it. If sub-projects were detected (monorepo), the audit is **per-project**: each
+sub-project gets its own `AUDIT_DIR/<project>/` with its own findings, baseline, and
+report, plus a repo-level rollup. Run subsequent phases once per project (scripts accept
 `--project NAME` to scope), then build the rollup in Phase 5.
 
 Now read `references/lang/<x>.md` for each detected language (C and C++ share
@@ -124,12 +133,13 @@ it the same way a re-run would, so idempotency holds. Be honest with `confidence
 ### Phase 4 — Baseline diff
 
 ```bash
-python3 scripts/baseline.py AUDIT_DIR/findings.json --baseline BASELINE --out AUDIT_DIR
+python3 scripts/baseline.py AUDIT_DIR/findings.json --out AUDIT_DIR
 ```
 
-Classifies findings `new | persisting | fixed` (and applies `suppressions.json` if
-present). First run: offer to write `baseline.json` and recommend committing it (and
-`suppressions.json`) to the repo.
+Baseline auto-links to the previous audit's findings via the manifest — no manual
+`--baseline` flag needed. Use `--baseline FILE` to override. Classifies findings
+`new | persisting | fixed` (and applies `suppressions.json` if present). First run:
+offer to write `baseline.json` and recommend committing `suppressions.json` to the repo.
 
 ### Phase 5 — Synthesis & report
 
@@ -139,8 +149,12 @@ per-dimension assessments with letter grades A–F, top risks, recommended seque
 
 ```bash
 python3 scripts/render_report.py AUDIT_DIR      # → report.md, report.html
-python3 scripts/render_dashboard.py AUDIT_DIR   # → dashboard.html
+python3 scripts/render_dashboard.py AUDIT_DIR   # → dashboard.html (auto-populates history from manifest)
+python3 scripts/audit_history.py register AUDIT_DIR
 ```
+
+The dashboard automatically includes trend charts from all prior audits via the manifest.
+`audit_history.py register` marks this audit as complete in the manifest.
 
 For monorepos, also render each project then build the rollup:
 `python3 scripts/render_report.py AUDIT_DIR --rollup`.
@@ -172,17 +186,20 @@ findings get a comment, not a duplicate.
 - Do not "fix" the code during an audit unless asked; the audit's output is findings.
 - Respect `--offline`: skip network-dependent scanners and record the gap.
 
-## Workspace layout (per audit)
+## Workspace layout
 
 ```
-.audit/                       # or --out DIR; per-project subdirs for monorepos
-├── repo-profile.json  tool-report.json  metrics.json
-├── raw/<tool>.{json,txt}     # untouched scanner output
-├── findings.json             # canonical — everything else is a projection
-├── narrative.json            # your synthesis blocks
-├── baseline.json  suppressions.json  issues-manifest.json
-├── report.md  report.html  dashboard.html
-└── review-progress.json      # deep-tier chunking state
+.audit/                               # audit root; ensure gitignored
+├── audit-history.json                # manifest of all audits
+├── suppressions.json                 # repo-level suppressions
+├── YYYYMMDDHHMM/                     # one per audit run
+│   ├── repo-profile.json  tool-report.json  metrics.json
+│   ├── raw/<tool>.{json,txt}         # untouched scanner output
+│   ├── findings.json                 # canonical — everything else is a projection
+│   ├── narrative.json                # your synthesis blocks
+│   ├── baseline.json  issues-manifest.json
+│   ├── report.md  report.html  dashboard.html
+│   └── review-progress.json          # deep-tier chunking state
 ```
 
 ## Reference index
