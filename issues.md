@@ -23,39 +23,62 @@
 - **Commit:** 73dcbcc
 - **Closed:** 2026-06-18
 
-## Open
-
 ### #4 — Multi-audit support: timestamped audit directories
 - **Labels:** enhancement, multi-audit
 - **Description:** Instead of overwriting `.audit/`, store each audit run in `.audit/YYYYMMDDHHMM/`. Repo-level files (`suppressions.json`) remain at `.audit/` root.
 - **Spec:** `docs/specs/2026-06-18-multi-audit-design.md` §1
+- **Resolution:** `init_audit()` creates timestamped directories; `migrate_audit()` converts existing flat layouts.
+- **Commits:** 0fcfcc1, f1f6554
+- **Closed:** 2026-06-18
 
 ### #5 — Multi-audit support: audit history manifest
 - **Labels:** enhancement, multi-audit
 - **Description:** Add `.audit/audit-history.json` to track all past audits for a repo. Schema includes id, timestamp, commit, branch, tier, baseline linkage, and status (in-progress/complete/failed).
 - **Spec:** `docs/specs/2026-06-18-multi-audit-design.md` §2
+- **Resolution:** `load_history()`/`save_history()` manage the manifest; `init_audit()` creates entries, `register_audit()` completes them.
+- **Commits:** 92673ac, 0fcfcc1, 0b7fe68
+- **Closed:** 2026-06-18
 
 ### #6 — Multi-audit support: `audit_history.py` script
 - **Labels:** enhancement, multi-audit
 - **Description:** New script with subcommands: `init` (create timestamped dir, register in manifest, auto-link baseline), `register` (mark audit complete), `previous` (print path to prior audit dir). Drives the other multi-audit features.
 - **Spec:** `docs/specs/2026-06-18-multi-audit-design.md` §3
+- **Resolution:** Added `scripts/audit_history.py` with init, register, previous, migrate subcommands and CLI. 16 tests in `tests/test_audit_history.py`.
+- **Commits:** 92673ac, 0fcfcc1, 0b7fe68, b81241f, 65d4da6, d19bc6d, f1f6554
+- **Closed:** 2026-06-18
 
 ### #7 — Multi-audit support: baseline auto-linking
 - **Labels:** enhancement, multi-audit
 - **Description:** Update `baseline.py` to auto-discover the previous audit's `findings.json` via `audit_history.py previous` when no explicit `--baseline` flag is given. Manual override still works.
 - **Spec:** `docs/specs/2026-06-18-multi-audit-design.md` §4
+- **Resolution:** Updated `find_baseline()` to call `previous_audit()` before legacy fallbacks. Tests in `tests/test_baseline_autolink.py`.
+- **Commit:** 04d6e75
+- **Closed:** 2026-06-18
 
 ### #8 — Multi-audit support: dashboard auto-history
 - **Labels:** enhancement, multi-audit
 - **Description:** Update `render_dashboard.py` to read `audit-history.json` and auto-populate the `--history` trend data from all complete audits. Manual `--history` flag still works as override.
 - **Spec:** `docs/specs/2026-06-18-multi-audit-design.md` §4
+- **Resolution:** Added `build_history_from_manifest()` and updated `main()` to auto-populate when no `--history` flag. Tests in `tests/test_dashboard_autohistory.py`.
+- **Commit:** e728e2b
+- **Closed:** 2026-06-18
 
 ### #9 — Multi-audit support: SKILL.md pipeline updates
 - **Labels:** documentation, multi-audit
 - **Description:** Update SKILL.md to reflect the new pipeline: call `audit_history.py init` in Phase 0, auto-baseline in Phase 4, call `audit_history.py register` in Phase 5. Update workspace layout diagram.
 - **Spec:** `docs/specs/2026-06-18-multi-audit-design.md` §5
+- **Resolution:** Updated Phase 0, Phase 4, Phase 5 instructions and workspace layout. Added migrate invocation.
+- **Commit:** aa225d8
+- **Closed:** 2026-06-18
 
 ### #10 — Migration script for existing audits
 - **Labels:** enhancement, multi-audit
 - **Description:** Add a `migrate` subcommand to `audit_history.py` that moves existing flat `.audit/` contents into a timestamped subdirectory, derives timestamp from metadata or file mtime, and creates the initial `audit-history.json`.
 - **Spec:** `docs/specs/2026-06-18-multi-audit-design.md` §3
+- **Resolution:** Added `migrate_audit()` and wired into CLI. Preserves `suppressions.json` at root. Tests in `tests/test_audit_history.py`.
+- **Commit:** f1f6554
+- **Closed:** 2026-06-18
+
+## Open
+
+(none)
