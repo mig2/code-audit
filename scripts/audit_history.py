@@ -93,3 +93,27 @@ def register_audit(audit_dir):
 
     entry["status"] = "complete"
     save_history(history, audit_root)
+
+
+def previous_audit(audit_dir):
+    audit_dir = Path(audit_dir)
+    audit_root = audit_dir.parent
+    dir_name = audit_dir.name
+
+    history = load_history(audit_root)
+    entry = None
+    for a in history["audits"]:
+        if a["id"] == dir_name:
+            entry = a
+            break
+    if entry is None:
+        return None
+
+    baseline_id = entry.get("baseline_from")
+    if baseline_id is None:
+        return None
+
+    prev_dir = audit_root / baseline_id
+    if prev_dir.exists():
+        return prev_dir
+    return None

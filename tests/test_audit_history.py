@@ -86,3 +86,33 @@ def test_register_marks_complete(tmp_audit, sample_findings, sample_narrative, s
 def test_register_missing_dir_fails(tmp_audit):
     with pytest.raises(SystemExit):
         audit_history.register_audit(tmp_audit / "nonexistent")
+
+
+def test_previous_returns_prior_audit(tmp_audit, sample_findings):
+    first = tmp_audit / "202601011000"
+    first.mkdir()
+    write_audit(first, sample_findings)
+    h = {"repo": "r", "remote": "", "audits": [
+        {"id": "202601011000", "dir": "202601011000", "status": "complete",
+         "timestamp": "2026-01-01T10:00:00Z", "commit": "", "branch": "",
+         "tier": "", "baseline_from": None},
+        {"id": "202602011000", "dir": "202602011000", "status": "in-progress",
+         "timestamp": "2026-02-01T10:00:00Z", "commit": "", "branch": "",
+         "tier": "", "baseline_from": "202601011000"},
+    ]}
+    (tmp_audit / "202602011000").mkdir()
+    audit_history.save_history(h, tmp_audit)
+    result = audit_history.previous_audit(tmp_audit / "202602011000")
+    assert result == first
+
+
+def test_previous_returns_none_for_first(tmp_audit):
+    h = {"repo": "r", "remote": "", "audits": [
+        {"id": "202601011000", "dir": "202601011000", "status": "in-progress",
+         "timestamp": "2026-01-01T10:00:00Z", "commit": "", "branch": "",
+         "tier": "", "baseline_from": None},
+    ]}
+    (tmp_audit / "202601011000").mkdir()
+    audit_history.save_history(h, tmp_audit)
+    result = audit_history.previous_audit(tmp_audit / "202601011000")
+    assert result is None
