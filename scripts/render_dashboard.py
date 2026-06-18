@@ -57,6 +57,26 @@ def slim(f):
     return out
 
 
+def build_history_from_manifest(audit_root, current_id):
+    """Build history list from audit-history.json for the trend chart."""
+    sys.path.insert(0, str(Path(__file__).parent))
+    from audit_history import load_history
+
+    audit_root = Path(audit_root)
+    history_doc = load_history(audit_root)
+    complete = [a for a in history_doc["audits"] if a["status"] == "complete"]
+    if len(complete) < 2:
+        return []
+
+    result = []
+    for a in complete:
+        d = audit_root / a["dir"]
+        findings, _, _ = collect(d)
+        if findings:
+            result.append({"label": a["id"][:12], "counts": severity_counts(findings)})
+    return result
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("audit_dir")
@@ -74,13 +94,17 @@ def main():
     repo_name = Path(profile.get("repo", d.resolve().name)).name
 
     history = []
-    for hdir in args.history:
-        hp = Path(hdir)
-        hf, _, _ = collect(hp)
-        history.append({"label": hp.name[:12],
-                        "counts": severity_counts(hf)})
-    if history:
+    if args.history:
+        for hdir in args.history:
+            hp = Path(hdir)
+            hf, _, _ = collect(hp)
+            history.append({"label": hp.name[:12],
+                            "counts": severity_counts(hf)})
         history.append({"label": "current", "counts": severity_counts(findings)})
+    else:
+        # auto-discover from manifest
+        audit_root = d.parent
+        history = build_history_from_manifest(audit_root, d.name)
 
     data = {
         "title": f"{repo_name} — audit console",
