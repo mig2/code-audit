@@ -113,6 +113,15 @@ def previous_audit(audit_dir):
     if baseline_id is None:
         return None
 
+    # verify the referenced audit is complete
+    baseline_entry = None
+    for a in history["audits"]:
+        if a["id"] == baseline_id:
+            baseline_entry = a
+            break
+    if baseline_entry is None or baseline_entry.get("status") != "complete":
+        return None
+
     prev_dir = audit_root / baseline_id
     if prev_dir.exists():
         return prev_dir
