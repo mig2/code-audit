@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800;900&family=IBM+Plex+Sans:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f7f6; --panel:#fdfdfc; --ink:#1b2126; --ink2:#4a555c; --rule:#d7dcda;
+  --rule2:#b8c1bd; --steel:#2d5c7f; --steel-soft:#e3ecf2;
+  --p0:#a4243b; --p1:#c75000; --p2:#a8820a; --p3:#4a6fa5; --info:#7a8489;
+  --ok:#2e7d52;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --disp:'Archivo',var(--sans);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 var(--sans);
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding:0 32px 96px}
+a{color:var(--steel);text-decoration:none;border-bottom:1px solid var(--rule2)}
+a:hover{border-bottom-color:var(--steel)}
+code{font:.85em var(--mono);background:var(--steel-soft);padding:.1em .35em;border-radius:3px}
+pre{background:#eef1f0;border:1px solid var(--rule);padding:14px;overflow-x:auto;
+  font:13px/1.5 var(--mono);border-radius:4px}
+h1,h2,h3{font-family:var(--disp);line-height:1.15;margin:0}
+p{margin:.7em 0}
+
+/* masthead + nameplate */
+header{padding:56px 0 0}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.22em;color:var(--steel);
+  text-transform:uppercase;margin-bottom:14px}
+h1.masthead{font-weight:900;font-size:clamp(34px,5.4vw,58px);letter-spacing:-.015em}
+.plate{margin:30px 0 0;border:2px solid var(--ink);background:var(--panel);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.plate>div{padding:12px 16px;border-right:1px solid var(--rule2)}
+.plate>div:last-child{border-right:0}
+.plate .k{font:600 10px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink2);margin-bottom:6px}
+.plate .v{font:500 14px/1.35 var(--mono);word-break:break-all}
+
+/* severity strip under plate */
+.sevstrip{display:flex;height:14px;border:2px solid var(--ink);border-top:0;overflow:hidden}
+.sevstrip span{display:block;height:100%}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;
+  font:500 12px var(--mono);color:var(--ink2)}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;
+  vertical-align:-1px;border-radius:2px}
+
+section{margin-top:72px}
+.secthead{display:flex;align-items:baseline;gap:14px;border-bottom:2px solid var(--ink);
+  padding-bottom:10px;margin-bottom:26px}
+.secthead h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.secthead .tag{font:600 11px/1 var(--mono);letter-spacing:.18em;color:var(--ink2);
+  text-transform:uppercase}
+
+/* scorecard */
+table{width:100%;border-collapse:collapse;font-size:14.5px;background:var(--panel)}
+th{font:600 11px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  text-align:left;color:var(--ink2);border-bottom:2px solid var(--ink);padding:10px 12px}
+td{padding:11px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.grade{display:inline-grid;place-items:center;min-width:46px;height:34px;padding:0 8px;
+  border:2.5px solid currentColor;border-radius:4px;font:800 17px var(--disp);
+  letter-spacing:.02em;transform:rotate(-2deg)}
+.gA{color:var(--ok)}.gB{color:#4f7d2e}.gC{color:var(--p2)}.gD{color:var(--p1)}
+.gF{color:var(--p0)}.gNA{color:var(--info);border-style:dashed;transform:none;
+  font-weight:600;font-size:12px}
+.counts{font:500 12px var(--mono);color:var(--ink2);white-space:nowrap}
+
+/* severity + status chips */
+.chip{display:inline-block;font:600 11px/1 var(--mono);letter-spacing:.06em;
+  padding:4px 8px;border-radius:3px;color:#fff;white-space:nowrap}
+.cP0{background:var(--p0)}.cP1{background:var(--p1)}.cP2{background:var(--p2)}
+.cP3{background:var(--p3)}.cINFO{background:var(--info)}
+.st{display:inline-block;font:600 10.5px/1 var(--mono);letter-spacing:.08em;
+  padding:3px 7px;border:1px solid var(--rule2);border-radius:3px;color:var(--ink2);
+  text-transform:uppercase}
+.st.new{border-color:var(--p1);color:var(--p1)}
+.st.fixed{border-color:var(--ok);color:var(--ok)}
+
+/* findings */
+.finding{background:var(--panel);border:1px solid var(--rule);border-left:5px solid var(--info);
+  margin:0 0 14px;padding:16px 18px 14px;border-radius:0 4px 4px 0}
+.finding.P0{border-left-color:var(--p0)}.finding.P1{border-left-color:var(--p1)}
+.finding.P2{border-left-color:var(--p2)}.finding.P3{border-left-color:var(--p3)}
+.fhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fhead .fid{font:600 12px var(--mono);color:var(--ink2)}
+.fhead h3{font-size:16.5px;font-weight:700;font-family:var(--sans);flex:1 1 100%;
+  margin-top:6px}
+.fmeta{font:500 12px var(--mono);color:var(--ink2);margin-top:4px}
+.floc{font:500 12.5px var(--mono);margin-top:8px}
+.fbody{margin-top:8px;font-size:14.5px;color:#2a3338}
+.frec{margin-top:8px;font-size:14.5px;padding:10px 12px;background:var(--steel-soft);
+  border-radius:4px}
+.frec b{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--steel);display:block;margin-bottom:4px}
+details.dim-extra{margin:6px 0 18px}
+details.dim-extra summary{cursor:pointer;font:600 13px var(--mono);color:var(--steel)}
+.risk{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.risk .n{font:800 22px var(--disp);color:var(--rule2);min-width:38px}
+.risk h3{font-size:16px;font-weight:700;font-family:var(--sans)}
+.risk p{margin:.35em 0 0;font-size:14.5px;color:#2a3338}
+.note{font-size:14px;color:var(--ink2);border:1px dashed var(--rule2);
+  padding:12px 14px;border-radius:4px;background:var(--panel)}
+footer{margin-top:90px;border-top:2px solid var(--ink);padding-top:14px;
+  font:500 12px var(--mono);color:var(--ink2);display:flex;justify-content:space-between;
+  flex-wrap:wrap;gap:8px}
+@media print{.wrap{max-width:none;padding:0 8mm}.finding{break-inside:avoid}}
+@media (max-width:640px){.wrap{padding:0 18px 60px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Code audit · inspection report</div>
+  <h1 class="masthead">{{REPO_NAME}}</h1>
+  <div class="plate">{{PLATE}}</div>
+  <div class="sevstrip">{{SEVSTRIP}}</div>
+  <div class="legend">{{LEGEND}}</div>
+</header>
+
+{{BODY}}
+
+<footer>
+  <span>Generated by code-audit · {{DATE}}</span>
+  <span>findings.json is the canonical record</span>
+</footer>
+</div>
+</body>
+</html>

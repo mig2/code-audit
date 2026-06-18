@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;900&family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f5f6f5;--panel:#fdfdfc;--ink:#1b2126;--ink2:#4d585f;--rule:#d7dcda;
+  --rule2:#b8c1bd;--steel:#2d5c7f;--steel-soft:#e3ecf2;
+  --p0:#a4243b;--p1:#c75000;--p2:#a8820a;--p3:#4a6fa5;--info:#7a8489;--ok:#2e7d52;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;--sans:'IBM Plex Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:
+  linear-gradient(var(--rule) 1px,transparent 1px) 0 0/100% 28px,
+  linear-gradient(90deg,var(--rule) 1px,transparent 1px) 0 0/28px 100%,
+  var(--paper);
+  background-blend-mode:soft-light,soft-light,normal;
+  color:var(--ink);font:14px/1.5 var(--sans)}
+.wrap{max-width:1280px;margin:0 auto;padding:26px 28px 80px}
+h1{font:900 26px 'Archivo',var(--sans);margin:0;letter-spacing:-.01em}
+.sub{font:500 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  color:var(--steel);margin-bottom:6px}
+.meta{font:500 12px var(--mono);color:var(--ink2);margin-top:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:10px;margin:20px 0}
+.card{background:var(--panel);border:1.5px solid var(--ink);padding:10px 14px;cursor:pointer}
+.card.inactive{opacity:.38}
+.card .n{font:800 26px 'Archivo',var(--sans)}
+.card .l{font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.card.s-P0 .n{color:var(--p0)}.card.s-P1 .n{color:var(--p1)}.card.s-P2 .n{color:var(--p2)}
+.card.s-P3 .n{color:var(--p3)}.card.s-INFO .n{color:var(--info)}.card.s-fixed .n{color:var(--ok)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0;
+  background:var(--panel);border:1px solid var(--rule);padding:10px 12px}
+select,input[type=search]{font:500 13px var(--mono);padding:6px 8px;border:1px solid var(--rule2);
+  background:#fff;color:var(--ink);border-radius:3px}
+input[type=search]{flex:1;min-width:160px}
+.count{font:600 12px var(--mono);color:var(--ink2);margin-left:auto}
+.f{background:var(--panel);border:1px solid var(--rule);border-left:5px solid var(--info);
+  margin-bottom:8px;border-radius:0 3px 3px 0}
+.f.P0{border-left-color:var(--p0)}.f.P1{border-left-color:var(--p1)}
+.f.P2{border-left-color:var(--p2)}.f.P3{border-left-color:var(--p3)}
+.fh{display:flex;gap:10px;align-items:center;padding:10px 14px;cursor:pointer;flex-wrap:wrap}
+.fh:hover{background:var(--steel-soft)}
+.chip{font:600 10.5px var(--mono);padding:3px 7px;border-radius:3px;color:#fff}
+.cP0{background:var(--p0)}.cP1{background:var(--p1)}.cP2{background:var(--p2)}
+.cP3{background:var(--p3)}.cINFO{background:var(--info)}
+.st{font:600 9.5px var(--mono);letter-spacing:.06em;padding:2px 6px;border:1px solid var(--rule2);
+  border-radius:3px;color:var(--ink2);text-transform:uppercase}
+.st.new{border-color:var(--p1);color:var(--p1)}.st.fixed{border-color:var(--ok);color:var(--ok)}
+.ft{font-weight:600;flex:1;min-width:200px}
+.fid{font:500 11px var(--mono);color:var(--ink2)}
+.fb{display:none;padding:4px 16px 14px;border-top:1px dashed var(--rule);font-size:13.5px}
+.f.open .fb{display:block}
+.fb code,.loc{font:12px var(--mono);background:var(--steel-soft);padding:1px 5px;border-radius:3px}
+.fb .rec{margin-top:8px;padding:8px 10px;background:var(--steel-soft);border-radius:3px}
+h2{font:800 17px 'Archivo',var(--sans);margin:34px 0 10px;display:flex;gap:10px;align-items:baseline}
+h2 .tag{font:600 10px var(--mono);letter-spacing:.16em;color:var(--ink2);text-transform:uppercase}
+.treemap{display:flex;flex-wrap:wrap;gap:3px;background:var(--panel);
+  border:1px solid var(--rule);padding:8px}
+.cell{display:grid;place-items:center;color:#fff;font:600 10px var(--mono);
+  min-width:34px;min-height:30px;padding:4px;text-align:center;overflow:hidden;
+  border-radius:2px;cursor:default}
+svg text{font:500 10.5px var(--mono);fill:var(--ink2)}
+.legend{font:500 11px var(--mono);color:var(--ink2);margin-top:6px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 5px 0 12px;vertical-align:-1px}
+.empty{padding:30px;text-align:center;color:var(--ink2);font:500 13px var(--mono)}
+@media(max-width:680px){.wrap{padding:16px 12px 60px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sub">code audit · live console</div>
+  <h1 id="title"></h1>
+  <div class="meta" id="meta"></div>
+
+  <div class="cards" id="cards"></div>
+
+  <div id="historyWrap" style="display:none">
+    <h2>Severity over time <span class="tag">history</span></h2>
+    <div style="background:var(--panel);border:1px solid var(--rule);padding:10px">
+      <svg id="hist" width="100%" height="180" viewBox="0 0 800 180" preserveAspectRatio="none"></svg>
+      <div class="legend" id="histLegend"></div>
+    </div>
+  </div>
+
+  <h2>Findings <span class="tag">filter &amp; drill</span></h2>
+  <div class="bar">
+    <select id="fDim"><option value="">dimension: all</option></select>
+    <select id="fSev"><option value="">severity: all</option></select>
+    <select id="fStatus"><option value="">status: open</option></select>
+    <select id="fConf"><option value="">confidence: all</option></select>
+    <select id="fProj" style="display:none"><option value="">project: all</option></select>
+    <input type="search" id="fText" placeholder="search title / rule / path…">
+    <span class="count" id="count"></span>
+  </div>
+  <div id="list"></div>
+
+  <h2>Hotspots <span class="tag">complexity × churn</span></h2>
+  <div class="treemap" id="treemap"></div>
+  <div class="legend">cell area ∝ hotspot score · color = dominant open-finding severity in file (gray = none)</div>
+</div>
+
+<script>
+const DATA = {{DATA}};
+const SEVS = ["P0","P1","P2","P3","INFO"];
+const SEVC = {P0:"#a4243b",P1:"#c75000",P2:"#a8820a",P3:"#4a6fa5",INFO:"#7a8489"};
+const $ = s => document.querySelector(s);
+const esc = s => (s??"").toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const F = DATA.findings;
+$("#title").textContent = DATA.title;
+$("#meta").textContent = DATA.meta;
+
+// summary cards (click to toggle severity filter)
+let sevFilter = new Set();
+function renderCards(){
+  const open = F.filter(f=>["new","persisting"].includes(f.status));
+  const fixed = F.filter(f=>f.status==="fixed").length;
+  let html = SEVS.map(s=>{
+    const n = open.filter(f=>f.severity===s).length;
+    const inactive = sevFilter.size && !sevFilter.has(s);
+    return `<div class="card s-${s} ${inactive?"inactive":""}" data-sev="${s}">
+      <div class="n">${n}</div><div class="l">${s} open</div></div>`;
+  }).join("");
+  html += `<div class="card s-fixed"><div class="n">${fixed}</div><div class="l">fixed</div></div>`;
+  $("#cards").innerHTML = html;
+  document.querySelectorAll(".card[data-sev]").forEach(c=>c.onclick=()=>{
+    const s=c.dataset.sev;
+    sevFilter.has(s)?sevFilter.delete(s):sevFilter.add(s);
+    renderCards(); renderList();
+  });
+}
+
+// filter controls
+function opts(sel, vals, label){
+  vals.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=`${label}: ${v}`;sel.appendChild(o);});
+}
+opts($("#fDim"), [...new Set(F.map(f=>f.dimension))].sort(), "dim");
+opts($("#fSev"), SEVS, "sev");
+["new","persisting","fixed","suppressed","all"].forEach(v=>{
+  const o=document.createElement("option");o.value=v;o.textContent="status: "+v;$("#fStatus").appendChild(o);});
+opts($("#fConf"), ["high","medium","low"], "conf");
+const projects=[...new Set(F.map(f=>f.project).filter(Boolean))];
+if(projects.length){$("#fProj").style.display="";opts($("#fProj"),projects.sort(),"project");}
+["fDim","fSev","fStatus","fConf","fProj","fText"].forEach(id=>{
+  $("#"+id).addEventListener("input", renderList);});
+
+function visible(){
+  const dim=$("#fDim").value, sev=$("#fSev").value, st=$("#fStatus").value||"open",
+        conf=$("#fConf").value, proj=$("#fProj").value,
+        q=$("#fText").value.toLowerCase();
+  return F.filter(f=>{
+    if(dim && f.dimension!==dim) return false;
+    if(sev && f.severity!==sev) return false;
+    if(sevFilter.size && !sevFilter.has(f.severity)) return false;
+    if(st==="open"){ if(!["new","persisting"].includes(f.status)) return false; }
+    else if(st!=="all" && f.status!==st) return false;
+    if(conf && f.confidence!==conf) return false;
+    if(proj && f.project!==proj) return false;
+    if(q){
+      const hay=(f.title+" "+f.rule+" "+f.locations.map(l=>l.path).join(" ")).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function renderList(){
+  const vs = visible().sort((a,b)=>SEVS.indexOf(a.severity)-SEVS.indexOf(b.severity));
+  $("#count").textContent = vs.length+" shown / "+F.length+" total";
+  $("#list").innerHTML = vs.length ? vs.map(f=>{
+    const locs = f.locations.slice(0,4).map(l=>
+      `<span class="loc">${esc(l.path)}${l.startLine?":"+l.startLine:""}</span>`).join(" ");
+    return `<div class="f ${f.severity}">
+      <div class="fh" onclick="this.parentElement.classList.toggle('open')">
+        <span class="chip c${f.severity}">${f.severity}</span>
+        <span class="st ${f.status}">${f.status}</span>
+        <span class="ft">${esc(f.title)}</span>
+        <span class="fid">${f.id} · ${esc(f.rule)}${f.project?" · "+esc(f.project):""}</span>
+      </div>
+      <div class="fb">
+        <div style="margin:6px 0">${locs}</div>
+        <div>${esc(f.description).slice(0,1500)}</div>
+        ${f.recommendation?`<div class="rec"><b>fix:</b> ${esc(f.recommendation)}</div>`:""}
+        <div style="margin-top:6px;font:500 11px var(--mono);color:var(--ink2)">
+          confidence ${f.confidence} · effort ${f.effort} · source ${esc(f.source)} ·
+          <span title="${f.fingerprint}">${f.fingerprint.slice(0,22)}…</span></div>
+      </div></div>`;
+  }).join("") : `<div class="empty">No findings match these filters.</div>`;
+}
+
+// hotspot treemap: area ∝ score, color = worst open severity touching the file
+function renderTreemap(){
+  const hs = DATA.hotspots||[];
+  if(!hs.length){$("#treemap").innerHTML='<div class="empty">no hotspot data</div>';return;}
+  const fileSev = {};
+  F.filter(f=>["new","persisting"].includes(f.status)).forEach(f=>
+    f.locations.forEach(l=>{
+      const cur=fileSev[l.path];
+      if(cur===undefined||SEVS.indexOf(f.severity)<SEVS.indexOf(cur)) fileSev[l.path]=f.severity;
+    }));
+  const max=hs[0].score||1, totalArea=90000;
+  const sum=hs.reduce((a,h)=>a+h.score,0)||1;
+  $("#treemap").innerHTML = hs.map(h=>{
+    const area=Math.max(totalArea*h.score/sum, 1200);
+    const w=Math.sqrt(area*1.8), hgt=Math.sqrt(area/1.8);
+    const sev=fileSev[h.path];
+    const bg=sev?SEVC[sev]:"#9aa6a0";
+    const name=h.path.split("/").pop();
+    return `<div class="cell" style="width:${w.toFixed(0)}px;height:${hgt.toFixed(0)}px;background:${bg}"
+      title="${esc(h.path)} — score ${h.score}, loc ${h.loc}, commits ${h.commits_12mo}${sev?", worst open: "+sev:""}">${esc(name)}</div>`;
+  }).join("");
+}
+
+// history chart
+function renderHistory(){
+  const H = DATA.history||[];
+  if(H.length<2) return;
+  $("#historyWrap").style.display="";
+  const W=800, Ht=180, pad=28;
+  const maxY=Math.max(...H.flatMap(p=>SEVS.map(s=>p.counts[s]||0)),1);
+  const x=i=>pad+i*(W-2*pad)/(H.length-1);
+  const y=v=>Ht-pad+ -(Ht-2*pad)*v/maxY + 0;
+  let svg="";
+  for(let g=0;g<=4;g++){const v=maxY*g/4, yy=y(v);
+    svg+=`<line x1="${pad}" y1="${yy}" x2="${W-pad}" y2="${yy}" stroke="#d7dcda"/>`+
+         `<text x="2" y="${yy+3}">${Math.round(v)}</text>`;}
+  SEVS.forEach(s=>{
+    const pts=H.map((p,i)=>`${x(i)},${y(p.counts[s]||0)}`).join(" ");
+    svg+=`<polyline points="${pts}" fill="none" stroke="${SEVC[s]}" stroke-width="2.5"/>`;
+  });
+  H.forEach((p,i)=>svg+=`<text x="${x(i)-18}" y="${Ht-6}">${p.label}</text>`);
+  $("#hist").innerHTML=svg;
+  $("#histLegend").innerHTML=SEVS.map(s=>`<i style="background:${SEVC[s]}"></i>${s}`).join("");
+}
+
+renderCards(); renderList(); renderTreemap(); renderHistory();
+</script>
+</body>
+</html>
