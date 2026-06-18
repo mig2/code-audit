@@ -24,3 +24,43 @@ def load_history(audit_root):
 def save_history(history, audit_root):
     p = Path(audit_root) / "audit-history.json"
     p.write_text(json.dumps(history, indent=2) + "\n")
+
+
+def init_audit(audit_root, repo="", remote=""):
+    audit_root = Path(audit_root)
+    audit_root.mkdir(parents=True, exist_ok=True)
+
+    now = datetime.now()
+    dir_name = now.strftime("%Y%m%d%H%M")
+    audit_dir = audit_root / dir_name
+
+    if audit_dir.exists():
+        suffix = 1
+        while (audit_root / f"{dir_name}_{suffix}").exists():
+            suffix += 1
+        dir_name = f"{dir_name}_{suffix}"
+        audit_dir = audit_root / dir_name
+
+    audit_dir.mkdir()
+
+    history = load_history(audit_root)
+    history["repo"] = repo or history.get("repo", "")
+    history["remote"] = remote or history.get("remote", "")
+
+    complete = [a for a in history["audits"] if a["status"] == "complete"]
+    baseline_from = complete[-1]["id"] if complete else None
+
+    entry = {
+        "id": dir_name,
+        "dir": dir_name,
+        "timestamp": now.astimezone(timezone.utc).isoformat(),
+        "commit": "",
+        "branch": "",
+        "tier": "",
+        "baseline_from": baseline_from,
+        "status": "in-progress",
+    }
+    history["audits"].append(entry)
+    save_history(history, audit_root)
+
+    return audit_dir

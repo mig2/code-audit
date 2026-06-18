@@ -27,3 +27,40 @@ def test_save_history(tmp_audit):
     audit_history.save_history(h, tmp_audit)
     written = json.loads((tmp_audit / "audit-history.json").read_text())
     assert written == h
+
+
+def test_init_creates_timestamped_dir(tmp_audit):
+    result = audit_history.init_audit(tmp_audit, repo="/tmp/repo", remote="git@x")
+    assert result.exists()
+    assert result.parent == tmp_audit
+    assert len(result.name) == 12
+    assert result.name.isdigit()
+
+
+def test_init_adds_manifest_entry(tmp_audit):
+    audit_history.init_audit(tmp_audit, repo="/tmp/repo", remote="git@x")
+    h = audit_history.load_history(tmp_audit)
+    assert len(h["audits"]) == 1
+    assert h["audits"][0]["status"] == "in-progress"
+    assert h["repo"] == "/tmp/repo"
+    assert h["remote"] == "git@x"
+
+
+def test_init_links_baseline_to_previous(tmp_audit):
+    h = {"repo": "r", "remote": "", "audits": [
+        {"id": "202601011000", "dir": "202601011000", "status": "complete",
+         "timestamp": "2026-01-01T10:00:00Z", "commit": "", "branch": "",
+         "tier": "", "baseline_from": None}
+    ]}
+    audit_history.save_history(h, tmp_audit)
+    (tmp_audit / "202601011000").mkdir()
+    result = audit_history.init_audit(tmp_audit, repo="r", remote="")
+    h2 = audit_history.load_history(tmp_audit)
+    new_entry = h2["audits"][-1]
+    assert new_entry["baseline_from"] == "202601011000"
+
+
+def test_init_no_baseline_on_first_run(tmp_audit):
+    audit_history.init_audit(tmp_audit, repo="r", remote="")
+    h = audit_history.load_history(tmp_audit)
+    assert h["audits"][0]["baseline_from"] is None
