@@ -140,3 +140,43 @@ def test_cli_previous_no_prior(tmp_audit):
     )
     assert result.returncode == 0
     assert result.stdout.strip() == ""
+
+
+import os
+
+
+def test_migrate_moves_flat_audit(tmp_audit, sample_findings, sample_narrative, sample_profile):
+    write_audit(tmp_audit, sample_findings, sample_narrative, sample_profile)
+    audit_history.migrate_audit(tmp_audit)
+    assert not (tmp_audit / "findings.json").exists()
+    h = audit_history.load_history(tmp_audit)
+    assert len(h["audits"]) == 1
+    assert h["audits"][0]["status"] == "complete"
+    ts_dir = tmp_audit / h["audits"][0]["dir"]
+    assert (ts_dir / "findings.json").exists()
+    assert (ts_dir / "narrative.json").exists()
+    assert (ts_dir / "repo-profile.json").exists()
+
+
+def test_migrate_preserves_suppressions(tmp_audit, sample_findings):
+    write_audit(tmp_audit, sample_findings)
+    supp = {"suppress": [{"fingerprint": "sha256:aaa111", "reason": "accepted"}]}
+    (tmp_audit / "suppressions.json").write_text(json.dumps(supp))
+    audit_history.migrate_audit(tmp_audit)
+    assert (tmp_audit / "suppressions.json").exists()
+    h = audit_history.load_history(tmp_audit)
+    ts_dir = tmp_audit / h["audits"][0]["dir"]
+    assert not (ts_dir / "suppressions.json").exists()
+
+
+def test_migrate_skips_if_already_migrated(tmp_audit):
+    h = {"repo": "r", "remote": "", "audits": [
+        {"id": "202601011000", "dir": "202601011000", "status": "complete",
+         "timestamp": "2026-01-01T10:00:00Z", "commit": "", "branch": "",
+         "tier": "", "baseline_from": None}
+    ]}
+    audit_history.save_history(h, tmp_audit)
+    (tmp_audit / "202601011000").mkdir()
+    audit_history.migrate_audit(tmp_audit)
+    h2 = audit_history.load_history(tmp_audit)
+    assert len(h2["audits"]) == 1

@@ -9,9 +9,21 @@ Subcommands:
 """
 import argparse
 import json
+import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+# files that stay at audit root (not moved into timestamped dir)
+_ROOT_FILES = {"audit-history.json", "suppressions.json"}
+
+# files/dirs that are audit artifacts (should be moved)
+_AUDIT_ARTIFACTS = {
+    "findings.json", "narrative.json", "repo-profile.json", "tool-report.json",
+    "metrics.json", "baseline.json", "issues-manifest.json",
+    "report.md", "report.html", "dashboard.html", "review-progress.json", "raw",
+}
 
 
 def load_history(audit_root):
@@ -129,7 +141,70 @@ def previous_audit(audit_dir):
 
 
 def migrate_audit(audit_root):
-    raise NotImplementedError("migrate not yet implemented")
+    audit_root = Path(audit_root)
+
+    if (audit_root / "audit-history.json").exists():
+        print("already migrated (audit-history.json exists)")
+        return
+
+    if not (audit_root / "findings.json").exists():
+        sys.exit(f"no findings.json in {audit_root} — nothing to migrate")
+
+    # derive timestamp from metadata or file mtime
+    ts = None
+    for meta_file in ("narrative.json", "findings.json"):
+        p = audit_root / meta_file
+        if p.exists():
+            doc = json.loads(p.read_text())
+            date_str = doc.get("audit", {}).get("date") or doc.get("date")
+            if date_str:
+                try:
+                    ts = datetime.fromisoformat(date_str)
+                except (ValueError, TypeError):
+                    pass
+            if ts is None:
+                ts = datetime.fromtimestamp(p.stat().st_mtime)
+            break
+    if ts is None:
+        ts = datetime.now()
+
+    dir_name = ts.strftime("%Y%m%d%H%M")
+    ts_dir = audit_root / dir_name
+    ts_dir.mkdir(exist_ok=True)
+
+    # move audit artifacts
+    for item in list(audit_root.iterdir()):
+        if item.name in _ROOT_FILES or item.name == dir_name:
+            continue
+        if item.name in _AUDIT_ARTIFACTS:
+            shutil.move(str(item), str(ts_dir / item.name))
+
+    # read metadata for manifest entry
+    profile = {}
+    narrative = {}
+    profile_p = ts_dir / "repo-profile.json"
+    if profile_p.exists():
+        profile = json.loads(profile_p.read_text())
+    narrative_p = ts_dir / "narrative.json"
+    if narrative_p.exists():
+        narrative = json.loads(narrative_p.read_text())
+
+    history = {
+        "repo": profile.get("repo", ""),
+        "remote": profile.get("remote", ""),
+        "audits": [{
+            "id": dir_name,
+            "dir": dir_name,
+            "timestamp": ts.isoformat(),
+            "commit": profile.get("commit", ""),
+            "branch": profile.get("branch", ""),
+            "tier": narrative.get("tier", ""),
+            "baseline_from": None,
+            "status": "complete",
+        }],
+    }
+    save_history(history, audit_root)
+    print(f"migrated to {ts_dir} — manifest created")
 
 
 def main():
