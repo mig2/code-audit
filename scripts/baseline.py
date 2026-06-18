@@ -23,6 +23,18 @@ from fingerprint import load_findings, save_findings, severity_counts  # noqa: E
 def find_baseline(findings_path, explicit):
     if explicit:
         return Path(explicit)
+
+    # try manifest-based auto-discovery
+    findings_dir = Path(findings_path).parent
+    try:
+        from audit_history import previous_audit
+        prev = previous_audit(findings_dir)
+        if prev and (prev / "findings.json").exists():
+            return prev / "findings.json"
+    except (ImportError, Exception):
+        pass
+
+    # fallback to legacy file-path search
     doc = json.loads(Path(findings_path).read_text())
     repo = Path(doc.get("audit", {}).get("repo", "."))
     for cand in (repo / ".audit-baseline.json",
