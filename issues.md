@@ -79,6 +79,13 @@
 - **Commit:** f1f6554
 - **Closed:** 2026-06-18
 
+### #11 — Install stamp records only a bare hash, so drift cannot be checked
+- **Labels:** setup, tooling
+- **Description:** `install.sh` wrote a short commit hash to `.installed-from`. That names a commit but not the repository it belongs to, and git hashes only resolve inside a known repo, so the source checkout could not be located and the installed payload could not be compared against it. Installing from a tree with uncommitted changes also recorded a commit that did not describe what was copied, with nothing to detect it.
+- **Resolution:** The stamp is now JSON carrying `source_path`, `source_remote`, full `commit`, `branch`, `installed_at`, and `dirty`, and the installer warns when the source tree is dirty. The legacy bare-hash format stays readable; consumers report those installs as unverifiable rather than current.
+- **Commit:** 78acbfa
+- **Closed:** 2026-08-02
+
 ## Open
 
 (none)
