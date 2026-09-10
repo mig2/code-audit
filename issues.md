@@ -88,4 +88,46 @@
 
 ## Open
 
-(none)
+### #12 — `baseline.py --write-baseline` overwrites the previous audit's `findings.json` when auto-linked
+- **Labels:** bug, multi-audit
+- **Description:** `find_baseline()` returns the prior audit's `findings.json` via the manifest; `--write-baseline` then writes the trimmed snapshot to that same path (`baseline.py:138`), destroying the prior audit's data.
+
+### #13 — OSV findings can never reach P0: CVSS vector string is parsed as a number
+- **Labels:** bug
+- **Description:** `normalize_findings.py:352` reads OSV `severity[].score` as a float, but it is a CVSS vector string (always contains `/`), so the expression is `0` and every OSV finding is P1.
+
+### #14 — `fingerprint.py` renumbers finding IDs on every save, so reports and issues cite unstable IDs
+- **Labels:** bug
+- **Description:** `save_findings()` reassigns `CA-YYYY-NNNN` across all findings on each save; `add-finding` shifts existing ids cited in reports and tracker issues.
+
+### #15 — Phase 5 order: dashboard rendered before `register`, so the current audit is missing from its own trend chart
+- **Labels:** bug, multi-audit, documentation
+- **Description:** `build_history_from_manifest()` only includes `status == "complete"` audits; SKILL.md runs the dashboard before `register`, so the current audit is never in its own chart.
+
+### #16 — Documented pipeline flags that do not exist or do not work
+- **Labels:** bug, documentation
+- **Description:** `--project NAME` is not implemented anywhere; `--path` is ignored by `run_scanners.py`; compare mode has no `comparison.html`/Outliers; `--rollup` has no HTML output.
+
+### #17 — Scanner outputs written but never parsed; tools probed but never run
+- **Labels:** enhancement, tooling
+- **Description:** radon, cargo-deny, pmd output is written but has no parser. jscpd, vulture, knip, golangci-lint, clang-tidy, spotbugs, license tools and others are probed by `check_tools.py` but never run. Registry does not match the lang references.
+
+### #18 — `metrics.py` does not produce the inputs the dimension rubrics assume
+- **Labels:** enhancement
+- **Description:** No function-size distribution, regex-count "complexity", no duplication or license inventory, no coverage-by-area, cycle detection only for TS. Dead TODO loop and a redundant second file walk.
+
+### #19 — Reference and README drift
+- **Labels:** documentation
+- **Description:** README output tree is the old flat layout; `osv-scanner -r` syntax invalid in five lang files; GitLab epic ladder described but unimplemented; `check_tools --fast` undocumented; lang-file invocations diverge from `run_scanners` argv.
+
+### #20 — Fragility: install_tools.sh asset selection, render_report partial-metrics crash, skipped-tool inflation, dead code
+- **Labels:** bug, tooling, cleanup
+- **Description:** Release-asset grep can pick `.sig` files, no arm64 mapping, `curl` unchecked; `render_report` crashes on metrics without `source_loc`; `run_scanners` records all unavailable tools as skipped regardless of `--only`; assorted dead code.
+
+### #21 — Add tests for `normalize_findings` parsers, `metrics`, `render_report`, `detect_repo`
+- **Labels:** enhancement, tooling
+- **Description:** All 20 tests cover multi-audit plumbing; the 18 parsers, metrics, report rendering, repo detection, fingerprint id stability and compare/file-issues planning have none. Add fixture-based tests and a dev requirements file.
+
+### #22 — Restructure into a `code` plugin bundle: `skills/audit` and `skills/calibration`
+- **Labels:** enhancement, setup
+- **Description:** Convert to a Claude Code plugin (`.claude-plugin/plugin.json`, `skills/<name>/SKILL.md`) so both skills are invoked as `/code:audit` and `/code:calibration`. Retire or wrap `install.sh`. Do after the audit fixes land.
