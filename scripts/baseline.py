@@ -4,7 +4,9 @@
 Usage: baseline.py AUDIT_DIR/findings.json [--baseline FILE] [--suppressions FILE]
        [--write-baseline] --out AUDIT_DIR
 
-- baseline FILE defaults to <repo>/.audit-baseline.json then AUDIT_DIR/baseline.json
+- baseline FILE defaults to the previous audit's findings.json (via audit-history.json),
+  then <repo>/.audit-baseline.json, then AUDIT_DIR/baseline.json
+- --write-baseline always writes AUDIT_DIR/baseline.json
 - suppressions FILE: {"suppress": [{"fingerprint": "...", "reason": "..."}|
                                    {"rule": "...", "path_prefix": "...", "reason": "..."}]}
 - Findings present in baseline -> status "persisting"
@@ -135,8 +137,10 @@ def main():
                 if f["status"] in ("new", "persisting")
             ],
         }
-        dest = bpath or (out / "baseline.json")
-        Path(dest).write_text(json.dumps(snapshot, indent=2) + "\n")
+        # Never write to bpath: with manifest auto-linking it is the previous
+        # audit's full findings.json, and the snapshot would replace it.
+        dest = out / "baseline.json"
+        dest.write_text(json.dumps(snapshot, indent=2) + "\n")
         print(f"baseline written: {dest} ({len(snapshot['findings'])} open findings)")
 
     print(f"new {n_new} / persisting {n_pers} / fixed {n_fixed} / suppressed {n_supp}")
