@@ -168,7 +168,7 @@ def git_churn(repo, months=12):
         r = subprocess.run(
             ["git", "-C", str(repo), "log", f"--since={months} months ago",
              "--name-only", "--pretty=format:"],
-            capture_output=True, text=True, timeout=120)
+            capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
         return Counter(l.strip() for l in r.stdout.splitlines() if l.strip())
     except Exception:
         return Counter()
@@ -176,8 +176,10 @@ def git_churn(repo, months=12):
 
 def git_authors(repo, path):
     try:
-        r = subprocess.run(["git", "-C", str(repo), "shortlog", "-sn", "--", path],
-                           capture_output=True, text=True, timeout=60)
+        # without a revision, shortlog reads the log from stdin when stdin is not a tty
+        r = subprocess.run(["git", "-C", str(repo), "shortlog", "-sn", "HEAD", "--", path],
+                           capture_output=True, text=True, timeout=60,
+                           stdin=subprocess.DEVNULL)
         return len(r.stdout.strip().splitlines())
     except Exception:
         return None
