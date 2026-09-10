@@ -1,0 +1,8 @@
+{
+  "Golang errors": {},
+  "Issues": [
+    {"severity": "HIGH", "confidence": "HIGH", "cwe": {"id": "78", "url": "https://cwe.mitre.org/data/definitions/78.html"}, "rule_id": "G204", "details": "Subprocess launched with a potential tainted input or cmd arguments", "file": "/r/cmd/run.go", "code": "exec.Command(name, args...)", "line": "42", "column": "9", "nosec": false, "suppressions": null},
+    {"severity": "LOW", "confidence": "HIGH", "cwe": {"id": "703"}, "rule_id": "G104", "details": "Errors unhandled.", "file": "/r/pkg/io.go", "code": "f.Close()", "line": "17-18", "column": "2", "nosec": false, "suppressions": null}
+  ],
+  "Stats": {"files": 12, "lines": 900, "nosec": 0, "found": 2}
+}

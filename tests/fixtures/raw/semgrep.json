@@ -1,0 +1,8 @@
+{
+  "results": [
+    {"check_id": "python.lang.security.audit.eval-detected.eval-detected", "path": "/r/src/x.py", "start": {"line": 5, "col": 1}, "end": {"line": 5, "col": 12}, "extra": {"message": "Detected the use of eval(). eval() can be dangerous if used to evaluate dynamic content.", "severity": "ERROR", "lines": "eval(user_input)", "fix": null, "metadata": {"cwe": ["CWE-95"]}}},
+    {"check_id": "python.lang.best-practice.open-never-closed.open-never-closed", "path": "/r/src/y.py", "start": {"line": 9, "col": 5}, "end": {"line": 9, "col": 30}, "extra": {"message": "file object opened without corresponding close", "severity": "WARNING", "lines": "fh = open(p)", "metadata": {}}}
+  ],
+  "errors": [],
+  "paths": {"scanned": ["src/x.py", "src/y.py"]}
+}

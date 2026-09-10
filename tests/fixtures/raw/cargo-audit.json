@@ -1,0 +1,16 @@
+{
+  "database": {"advisory-count": 700, "last-commit": "abc", "last-updated": "2026-01-01T00:00:00Z"},
+  "lockfile": {"dependency-count": 3},
+  "settings": {"target_arch": null, "target_os": null, "severity": null, "ignore": [], "informational_warnings": ["unmaintained"]},
+  "vulnerabilities": {
+    "found": true,
+    "count": 1,
+    "list": [
+      {"advisory": {"id": "RUSTSEC-2021-0124", "package": "tokio", "title": "Data race when sending and receiving after closing a `oneshot` channel", "description": "If a `tokio::sync::oneshot` channel is closed, a concurrent send and receive can race.", "date": "2021-11-16", "aliases": ["CVE-2021-45710"], "categories": ["memory-corruption"]},
+       "versions": {"patched": [">=1.8.4, <1.9.0", ">=1.13.1"], "unaffected": ["<0.1.14"]},
+       "affected": null,
+       "package": {"name": "tokio", "version": "1.7.0", "source": "registry+https://github.com/rust-lang/crates.io-index"}}
+    ]
+  },
+  "warnings": {}
+}

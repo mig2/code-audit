@@ -1,0 +1,7 @@
+{
+  "errors": [],
+  "results": [
+    {"code": "1 import pickle\n2 pickle.loads(x)\n", "filename": "/r/src/load.py", "issue_confidence": "HIGH", "issue_severity": "MEDIUM", "issue_text": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data", "line_number": 2, "line_range": [2], "more_info": "https://bandit.readthedocs.io/en/latest/blacklists/blacklist_calls.html#b301-pickle", "test_id": "B301", "test_name": "blacklist"},
+    {"code": "8 subprocess.call(cmd, shell=True)\n", "filename": "/r/src/run.py", "issue_confidence": "HIGH", "issue_severity": "HIGH", "issue_text": "subprocess call with shell=True identified, security issue.", "line_number": 8, "line_range": [8], "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b602_subprocess_popen_with_shell_equals_true.html", "test_id": "B602", "test_name": "subprocess_popen_with_shell_equals_true"}
+  ]
+}

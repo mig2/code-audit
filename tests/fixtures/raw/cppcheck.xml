@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results version="2">
+    <cppcheck version="2.13.0"/>
+    <errors>
+        <error id="nullPointer" severity="error" msg="Null pointer dereference: p" verbose="Null pointer dereference: p" cwe="476" file0="src/main.c">
+            <location file="/r/src/main.c" line="42" column="5" info="Null pointer dereference"/>
+            <location file="/r/src/main.c" line="40" column="9" info="Assignment 'p=NULL', assigned value is 0"/>
+            <symbol>p</symbol>
+        </error>
+        <error id="unreadVariable" severity="style" msg="Variable 'x' is assigned a value that is never used." verbose="Variable 'x' is assigned a value that is never used." cwe="563" inconclusive="true">
+            <location file="/r/src/util.c" line="7" column="9"/>
+            <symbol>x</symbol>
+        </error>
+        <error id="missingIncludeSystem" severity="information" msg="Include file not found" verbose="Include file not found"/>
+    </errors>
+</results>

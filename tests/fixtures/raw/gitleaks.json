@@ -1,0 +1,3 @@
+[
+  {"Description": "AWS Access Key", "StartLine": 3, "EndLine": 3, "StartColumn": 18, "EndColumn": 37, "Match": "REDACTED", "Secret": "REDACTED", "File": "config/settings.py", "SymlinkFile": "", "Commit": "abc123def4567890", "Entropy": 3.68, "Author": "dev", "Email": "dev@example.com", "Date": "2026-01-01T00:00:00Z", "Message": "add config", "Tags": [], "RuleID": "aws-access-key-id", "Fingerprint": "abc123def4567890:config/settings.py:aws-access-key-id:3"}
+]

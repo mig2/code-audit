@@ -1,0 +1,4 @@
+[
+  {"character": 1, "file": "/r/Sources/App/Foo.swift", "line": 12, "reason": "Force unwrapping should be avoided", "rule_id": "force_unwrapping", "severity": "error", "type": "Force Unwrapping"},
+  {"character": null, "file": "/r/Sources/App/Bar.swift", "line": 3, "reason": "Line should be 120 characters or less; currently it has 131 characters", "rule_id": "line_length", "severity": "warning", "type": "Line Length"}
+]

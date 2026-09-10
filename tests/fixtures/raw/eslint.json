@@ -1,0 +1,6 @@
+[
+  {"filePath": "/r/src/app.js", "messages": [
+    {"ruleId": "no-unused-vars", "severity": 2, "message": "'x' is defined but never used.", "line": 3, "column": 7, "nodeType": "Identifier"},
+    {"ruleId": "semi", "severity": 1, "message": "Missing semicolon.", "line": 4, "column": 10, "nodeType": "ExpressionStatement"}
+  ], "errorCount": 1, "warningCount": 1, "fixableErrorCount": 0, "fixableWarningCount": 1}
+]

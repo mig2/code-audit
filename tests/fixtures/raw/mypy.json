@@ -1,0 +1,2 @@
+{"file": "src/a.py", "line": 12, "column": 4, "message": "Incompatible return value type (got \"str\", expected \"int\")", "hint": null, "code": "return-value", "severity": "error"}
+{"file": "src/a.py", "line": 20, "column": 0, "message": "See https://mypy.rtfd.io", "hint": null, "code": null, "severity": "note"}

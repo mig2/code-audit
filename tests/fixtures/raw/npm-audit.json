@@ -1,0 +1,8 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "minimist": {"name": "minimist", "severity": "critical", "isDirect": false, "via": [{"source": 1179, "name": "minimist", "title": "Prototype Pollution in minimist", "url": "https://github.com/advisories/GHSA-xvch-5gv4-984h", "severity": "critical", "range": "<0.2.4"}], "effects": ["mkdirp"], "range": "<0.2.4", "nodes": ["node_modules/minimist"], "fixAvailable": true},
+    "lodash": {"name": "lodash", "severity": "moderate", "isDirect": true, "via": "Prototype Pollution", "effects": [], "range": "<4.17.21", "nodes": ["node_modules/lodash"], "fixAvailable": true}
+  },
+  "metadata": {"vulnerabilities": {"info": 0, "low": 0, "moderate": 1, "high": 0, "critical": 1, "total": 2}}
+}

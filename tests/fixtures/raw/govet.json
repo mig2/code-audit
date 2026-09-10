@@ -1,0 +1,17 @@
+# example.com/app/pkg
+{
+	"example.com/app/pkg": {
+		"printf": [
+			{
+				"posn": "/r/pkg/x.go:12:2",
+				"message": "fmt.Sprintf format %d has arg s of wrong type string"
+			}
+		],
+		"unusedresult": [
+			{
+				"posn": "/r/pkg/y.go:30:3",
+				"message": "result of fmt.Errorf call not used"
+			}
+		]
+	}
+}

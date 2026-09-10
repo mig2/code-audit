@@ -1,0 +1,2 @@
+{"code":"SA4006","severity":"error","location":{"file":"/r/pkg/x.go","line":10,"column":2},"end":{"file":"/r/pkg/x.go","line":10,"column":5},"message":"this value of err is never used"}
+{"code":"ST1005","severity":"error","location":{"file":"/r/pkg/y.go","line":4,"column":9},"end":{"file":"/r/pkg/y.go","line":4,"column":40},"message":"error strings should not be capitalized"}
