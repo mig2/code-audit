@@ -64,12 +64,14 @@ def build_history_from_manifest(audit_root, current_id):
 
     audit_root = Path(audit_root)
     history_doc = load_history(audit_root)
-    complete = [a for a in history_doc["audits"] if a["status"] == "complete"]
-    if len(complete) < 2:
+    # The current audit is still in-progress when its dashboard is rendered.
+    included = [a for a in history_doc["audits"]
+                if a["status"] == "complete" or a["id"] == current_id]
+    if len(included) < 2:
         return []
 
     result = []
-    for a in complete:
+    for a in included:
         d = audit_root / a["dir"]
         findings, _, _ = collect(d)
         if findings:
