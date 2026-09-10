@@ -170,8 +170,20 @@
 - **Commit:** 6a1e3fe
 - **Closed:** 2026-09-10
 
-## Open
-
 ### #24 — Add the `code:calibration` skill: proportionality and owner-expertise assessment
 - **Labels:** enhancement
 - **Description:** New skill at `skills/calibration/` producing per-area over-/under-built verdicts, a required-owner level and an evident-author level on an L0–L4 ladder (L0 = AI-assisted non-engineer), and a gap plan. Reuses an existing `.audit/` run; one stdlib signals script; references `ladder.md`, `signals.md`, `report.md`.
+- **Resolution:** SKILL.md, three references, `calibration_signals.py` (15 signal blocks) and `render_calibration.py` added with 10 tests; README documents the skill; plugin lists both skills.
+- **Commit:** 88a420e
+- **Closed:** 2026-09-10
+
+### #25 — `metrics.py` hangs: `git shortlog` reads stdin when not attached to a TTY
+- **Labels:** bug
+- **Description:** `git_authors()` ran `git shortlog -sn -- path` with no revision; without a TTY, shortlog reads the log from stdin and each hotspot lookup blocked for its full 60s timeout. Found during the calibration smoke run.
+- **Resolution:** All git calls pass `HEAD` and `stdin=DEVNULL`; regression test with a never-closing stdin pipe.
+- **Commit:** ddb2c0e
+- **Closed:** 2026-09-10
+
+## Open
+
+(none)
