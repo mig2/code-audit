@@ -208,15 +208,27 @@ def parse_govet(text, repo):
     return findings
 
 
+def iter_json_objects(text):
+    """Top-level JSON values from a stream, whether compact one-per-line or pretty-printed."""
+    dec = json.JSONDecoder()
+    i, n = 0, len(text)
+    while i < n:
+        while i < n and text[i] not in "{[":
+            i += 1
+        if i >= n:
+            return
+        try:
+            obj, i = dec.raw_decode(text, i)
+        except json.JSONDecodeError:
+            i += 1
+            continue
+        yield obj
+
+
 def parse_govulncheck(text, repo):
     findings, osvs = [], {}
-    for line in text.splitlines():
-        line = line.strip()
-        if not line.startswith("{"):
-            continue
-        try:
-            d = json.loads(line)
-        except json.JSONDecodeError:
+    for d in iter_json_objects(text):
+        if not isinstance(d, dict):
             continue
         if "osv" in d:
             o = d["osv"]
@@ -835,6 +847,7 @@ def main():
 
     all_findings = cap_floods(all_findings)
     out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
     doc = load_findings(out / "findings.json")
     doc["audit"] = {"repo": repo, "commit": profile.get("commit"),
                     "scope": profile.get("scope", "."),
