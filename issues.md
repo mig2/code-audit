@@ -86,23 +86,35 @@
 - **Commit:** 78acbfa
 - **Closed:** 2026-08-02
 
-## Open
-
 ### #12 — `baseline.py --write-baseline` overwrites the previous audit's `findings.json` when auto-linked
 - **Labels:** bug, multi-audit
 - **Description:** `find_baseline()` returns the prior audit's `findings.json` via the manifest; `--write-baseline` then writes the trimmed snapshot to that same path (`baseline.py:138`), destroying the prior audit's data.
+- **Resolution:** The snapshot is always written to `AUDIT_DIR/baseline.json`. Regression test asserts the prior audit's `findings.json` is byte-identical after a `--write-baseline` run.
+- **Commit:** 058c8dd
+- **Closed:** 2026-09-10
 
 ### #13 — OSV findings can never reach P0: CVSS vector string is parsed as a number
 - **Labels:** bug
 - **Description:** `normalize_findings.py:352` reads OSV `severity[].score` as a float, but it is a CVSS vector string (always contains `/`), so the expression is `0` and every OSV finding is P1.
+- **Resolution:** Added `cvss3_base_score()` (CVSS 3.0/3.1 formula) and `osv_severity()` mapping ≥9→P0, 7–9→P1, 4–7→P2, <4→P3, falling back to the advisory's severity label; unknown stays P1. Parametrized tests against known vectors.
+- **Commit:** 00fc500
+- **Closed:** 2026-09-10
 
 ### #14 — `fingerprint.py` renumbers finding IDs on every save, so reports and issues cite unstable IDs
 - **Labels:** bug
 - **Description:** `save_findings()` reassigns `CA-YYYY-NNNN` across all findings on each save; `add-finding` shifts existing ids cited in reports and tracker issues.
+- **Resolution:** Existing ids are preserved; new findings take the next number above the current maximum. Tests cover add-finding stability and cross-year continuation.
+- **Commit:** e99d763
+- **Closed:** 2026-09-10
 
 ### #15 — Phase 5 order: dashboard rendered before `register`, so the current audit is missing from its own trend chart
 - **Labels:** bug, multi-audit, documentation
 - **Description:** `build_history_from_manifest()` only includes `status == "complete"` audits; SKILL.md runs the dashboard before `register`, so the current audit is never in its own chart.
+- **Resolution:** The current audit is included regardless of manifest status, so the documented order (dashboard, then register) now works. Test added.
+- **Commit:** cf3f77b
+- **Closed:** 2026-09-10
+
+## Open
 
 ### #16 — Documented pipeline flags that do not exist or do not work
 - **Labels:** bug, documentation
