@@ -86,8 +86,9 @@ Now read `references/lang/<x>.md` for each detected language (C and C++ share
 python3 scripts/check_tools.py --profile AUDIT_DIR/repo-profile.json --out AUDIT_DIR
 ```
 
-Produces `tool-report.json`. Present the matrix to the user: available / missing /
-locally installable. Unless `--no-install`, offer to run:
+Produces `tool-report.json`. Add `--fast` to skip the `npx` probes (eslint, tsc, madge,
+knip, jscpd, license-checker) — on a cold cache each one downloads a package. Present
+the matrix to the user: available / missing / locally installable. Unless `--no-install`, offer to run:
 
 ```bash
 bash scripts/install_tools.sh --tools ruff,gosec,...   # user-level only, never sudo

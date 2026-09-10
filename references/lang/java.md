@@ -10,7 +10,7 @@ starters), Jakarta EE, Android (`AndroidManifest.xml` — note: Android adds lin
 
 | Purpose | Tool | Invocation | Notes |
 |---|---|---|---|
-| Bug patterns | SpotBugs + FindSecBugs | `spotbugs -textui -xml:withMessages -include ... target/classes` | needs compiled classes — `mvn -q compile` / `gradlew classes` first (user approval) |
+| Bug patterns | SpotBugs + FindSecBugs | `spotbugs -textui -effort:max -xml:withMessages -output raw/spotbugs.xml target/classes` (add `-pluginList findsecbugs-plugin.jar` for FindSecBugs) | needs compiled classes — `mvn -q compile` / `gradlew classes` first (user approval) |
 | Lint | PMD | `pmd check -d SRC -R rulesets/java/quickstart.xml -f json` | source-level, no build |
 | Style | Checkstyle | `checkstyle -c <repo's or google_checks.xml> -f xml SRC` | source-level |
 | SAST | semgrep | `semgrep scan --config p/java --config p/security-audit --json` | JSON |

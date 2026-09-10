@@ -23,7 +23,8 @@ Produces `comparison.md` + `comparison.html` with auto-built tables; you write a
 - **Outliers**: best/worst repo per dimension by grade then density.
 - **Same-repo trend detection**: when ≥2 dirs share a repo identity (remote URL in
   repo-profile), the script switches those into trend mode — new/fixed/persisting flows
-  between audits, severity counts over time. This also feeds the dashboard `--history`.
+  between audits, severity counts over time. (The dashboard builds its own trend chart
+  from `audit-history.json`; it does not consume compare output.)
 
 ## Same-language cohorts
 

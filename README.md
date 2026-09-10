@@ -10,6 +10,7 @@ Supports Python, TypeScript/JavaScript/Node, Swift, Go, C/C++, Java, and Rust, i
 /code-audit [triage|standard|deep] [--only dim1,dim2] [--path SUBDIR] [--out DIR]
             [--no-install] [--offline] [--file-issues] [--baseline FILE]
 /code-audit compare <auditdir1> <auditdir2> [...]
+/code-audit migrate                   # move a flat .audit/ to the timestamped layout
 ```
 
 ## Pipeline
@@ -26,22 +27,21 @@ Supports Python, TypeScript/JavaScript/Node, Swift, Go, C/C++, Java, and Rust, i
 
 ## Output
 
-All artifacts land in `.audit/` (or `--out DIR`):
+All artifacts land in `.audit/` (or `--out DIR`). Each run gets its own timestamped
+directory; prior audits are kept and the next run's baseline links to the previous one
+automatically.
 
 ```
 .audit/
-├── repo-profile.json
-├── tool-report.json
-├── metrics.json
-├── raw/                    # untouched scanner output
-├── findings.json           # canonical — everything else is a projection
-├── narrative.json
-├── baseline.json
-├── suppressions.json
-├── report.md
-├── report.html
-├── dashboard.html
-└── issues-manifest.json
+├── audit-history.json          # manifest of all audits
+├── suppressions.json           # repo-level suppressions
+└── YYYYMMDDHHMM/               # one per audit run
+    ├── repo-profile.json  tool-report.json  metrics.json
+    ├── raw/                    # untouched scanner output
+    ├── findings.json           # canonical — everything else is a projection
+    ├── narrative.json  baseline.json  issues-manifest.json
+    ├── report.md  report.html  dashboard.html
+    └── review-progress.json    # deep-tier chunking state
 ```
 
 ## Tiers

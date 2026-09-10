@@ -14,11 +14,11 @@ and CMake exists, generate via `cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -B buil
 
 | Purpose | Tool | Invocation | Notes |
 |---|---|---|---|
-| Static analysis | cppcheck | `cppcheck --enable=all --inconclusive --xml SRC 2> raw/cppcheck.xml` | no compile DB needed |
+| Static analysis | cppcheck | `cppcheck --enable=warning,style,performance,portability --inconclusive --xml --quiet . 2> raw/cppcheck.xml` (`--enable=all` adds `unusedFunction`/`missingInclude` noise; enable per repo if wanted) | no compile DB needed |
 | Static analysis | clang-tidy | `clang-tidy -p build-audit --checks=<set> $(files)` via `run-clang-tidy` | needs compile_commands.json |
 | Compiler warnings | gcc/clang | rebuild w/ `-Wall -Wextra -Wpedantic -Wconversion -Wshadow` (out-of-tree; user approval) | text |
 | Sanitizers | ASan/UBSan/TSan | test-suite run with `-fsanitize=address,undefined` (separate build; TSan separately) — **user approval, big runtime cost** | text |
-| SAST | semgrep | `semgrep scan --config p/c --config p/cpp --json` | JSON |
+| SAST | semgrep | `semgrep scan --config p/c --config p/cpp --config p/security-audit --json` | JSON |
 | Dep vulns | osv-scanner | conan/vcpkg manifests if present; vendored deps need manual inventory | JSON |
 | Secrets | gitleaks | `gitleaks detect --report-format json` | JSON |
 | Include hygiene | include-what-you-use | optional, needs compile DB | text |

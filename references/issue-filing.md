@@ -28,9 +28,9 @@ the script falls back automatically to: root issue body gets a task-list of cate
 links; category bodies get task-lists of finding links. Same visual hierarchy, no native
 nesting.
 
-**GitLab** — capability ladder, auto-detected: epics (Premium+: root = epic, categories =
-child epics or issues, findings = issues) → else issue links of type "relates to" with
-task-list checklists mirroring the GitHub fallback.
+**GitLab** — same three-level hierarchy of issues, connected with `glab issue link`
+("relates to") plus task-list checklists in the root and category bodies, mirroring the
+GitHub fallback. Epics are not used, so this works on every GitLab tier.
 
 Monorepo: project name is namespaced into titles — `[Audit/api-server/Security] ...` —
 and a per-project category layer is added only when >1 project has findings.
