@@ -1,0 +1,4 @@
+src/util.py:12: unused function 'old_helper' (80% confidence)
+src/models.py:44: unused import 'Optional' (90% confidence)
+src/models.py:70: unreachable code after 'return' (100% confidence)
+not a vulture line

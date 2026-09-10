@@ -1,0 +1,5 @@
+/r/src/net.cpp:42:5: warning: Value stored to 'n' is never read [clang-analyzer-deadcode.DeadStores]
+/r/src/net.cpp:88:12: warning: narrowing conversion from 'size_t' to 'int' [bugprone-narrowing-conversions]
+/r/src/util.cpp:10:1: warning: use 'auto' when initializing with a cast [modernize-use-auto]
+/r/src/util.cpp:20:9: warning: the parameter 'v' is copied for each invocation [performance-unnecessary-value-param]
+Suppressed 12 warnings (12 in non-user code).

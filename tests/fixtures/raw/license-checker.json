@@ -1,0 +1,6 @@
+{
+  "express@4.18.2": {"licenses": "MIT", "repository": "https://github.com/expressjs/express", "path": "/r/node_modules/express"},
+  "some-gpl-lib@1.0.0": {"licenses": "GPL-3.0", "repository": "", "path": "/r/node_modules/some-gpl-lib"},
+  "dual@2.0.0": {"licenses": ["MIT", "Apache-2.0"], "path": "/r/node_modules/dual"},
+  "mystery@0.1.0": {"licenses": "UNKNOWN", "path": "/r/node_modules/mystery"}
+}

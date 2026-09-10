@@ -1,0 +1,3 @@
+/r/Sources/App/Main.swift:12:1: warning: [OrderedImports] sort import statements lexicographically
+/r/Sources/App/Main.swift:40:5: warning: [NeverForceUnwrap] do not force unwrap the value of type 'String?'
+/r/Sources/App/Other.swift:3:1: warning: replace 'var' with 'let'

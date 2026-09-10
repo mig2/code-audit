@@ -1,0 +1,11 @@
+{
+  "/r/src/app.py": [
+    {"type": "function", "rank": "A", "name": "ok", "lineno": 1, "endline": 4, "complexity": 2},
+    {"type": "function", "rank": "D", "name": "gnarly", "lineno": 10, "endline": 80, "complexity": 24},
+    {"type": "class", "rank": "B", "name": "Svc", "lineno": 90, "endline": 200, "complexity": 8,
+     "methods": [
+       {"type": "method", "rank": "F", "name": "run", "lineno": 100, "endline": 199, "complexity": 45, "classname": "Svc"}
+     ]}
+  ],
+  "/r/src/broken.py": {"error": "invalid syntax"}
+}

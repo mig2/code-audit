@@ -10,12 +10,12 @@ starters), Jakarta EE, Android (`AndroidManifest.xml` — note: Android adds lin
 
 | Purpose | Tool | Invocation | Notes |
 |---|---|---|---|
-| Bug patterns | SpotBugs + FindSecBugs | `spotbugs -textui -effort:max -xml:withMessages -output raw/spotbugs.xml target/classes` (add `-pluginList findsecbugs-plugin.jar` for FindSecBugs) | needs compiled classes — `mvn -q compile` / `gradlew classes` first (user approval) |
-| Lint | PMD | `pmd check -d SRC -R rulesets/java/quickstart.xml -f json` | source-level, no build |
-| Style | Checkstyle | `checkstyle -c <repo's or google_checks.xml> -f xml SRC` | source-level |
+| Bug patterns (manual) | SpotBugs + FindSecBugs | `spotbugs -textui -effort:max -xml:withMessages -output raw/spotbugs.xml target/classes` (add `-pluginList findsecbugs-plugin.jar` for FindSecBugs) | needs compiled classes — `mvn -q compile` / `gradlew classes` first (user approval) |
+| Lint | PMD | `pmd check -d . -R rulesets/java/quickstart.xml -f json --no-fail-on-violation` | source-level, no build |
+| Style | Checkstyle | `checkstyle -c <repo's or google_checks.xml> -f xml SRC` (manual) | source-level |
 | SAST | semgrep | `semgrep scan --config p/java --config p/security-audit --json` | JSON |
 | Dep vulns | osv-scanner | `osv-scanner scan --format json -r .` (reads pom/gradle lockfiles) | JSON |
-| Dep vulns (alt) | OWASP dependency-check | `dependency-check --scan . --format JSON` | slow; NVD download — skip in `--offline` |
+| Dep vulns (alt) | OWASP dependency-check | `dependency-check --scan . --format JSON` (manual — not in the tool matrix) | slow; NVD download — skip in `--offline` |
 | Licenses | license-maven-plugin / gradle-license-report | if configured; else osv-scanner inventory + manual | varies |
 | Secrets | gitleaks | `gitleaks detect --report-format json` | JSON |
 | Coverage | JaCoCo | `mvn test jacoco:report` — **user approval** | XML |

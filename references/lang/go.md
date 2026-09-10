@@ -10,15 +10,15 @@ cobra/flag-heavy mains.
 | Purpose | Tool | Invocation | Output |
 |---|---|---|---|
 | Vet | go vet | `go vet -json ./...` | JSON |
-| Lint (meta) | golangci-lint | `golangci-lint run --out-format json` (respects repo config; else curated default set) | JSON |
-| Static analysis | staticcheck | `staticcheck -f json ./...` (skip if golangci already includes it) | JSON |
-| SAST | gosec | `gosec -fmt json ./...` | JSON |
+| Lint (meta) | golangci-lint | v1: `golangci-lint run --out-format json ./...` · v2: `golangci-lint run --output.json.path stdout ./...` (respects repo config) | JSON |
+| Static analysis | staticcheck | `staticcheck -f json ./...` — run only when golangci-lint is absent (it bundles staticcheck) | JSON |
+| SAST | gosec | `gosec -fmt json -quiet -no-fail ./...` | JSON |
 | Dep vulns | govulncheck | `govulncheck -json ./...` — **call-graph aware**: distinguishes imported-vs-called; trust its reachability for severity mapping | JSON |
-| Licenses | go-licenses | `go-licenses report ./... 2>/dev/null` | CSV |
+| Licenses | go-licenses | `go-licenses report ./...` (network; skipped in `--offline`) | CSV |
 | Secrets | gitleaks | `gitleaks detect --report-format json` | JSON |
 | Race detection | go test | `go test -race ./...` — **user approval to run tests**; race findings are P0/P1 gold | text |
 | Coverage | go test | `go test -coverprofile=... ./...` — user approval | profile |
-| Duplication | dupl (via golangci) or jscpd | — | JSON |
+| Duplication | jscpd | `npx jscpd . --reporters json --output raw/jscpd --silent --ignore <vendored globs>` (all languages); dupl (manual — not in the tool matrix) | JSON |
 
 Install: `go install tool@latest` → `~/go/bin` (pure no-root). gitleaks: release binary.
 

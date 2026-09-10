@@ -440,8 +440,337 @@ def parse_npm_audit(data, repo):
             locations=[loc("package-lock.json")], snippet_key=name)
 
 
+def parse_radon_cc(data, repo):
+    sev = {"D": "P2", "E": "P1", "F": "P1"}
+    for path, blocks in (data or {}).items():
+        if not isinstance(blocks, list):
+            continue
+        stack = list(blocks)
+        while stack:
+            b = stack.pop()
+            stack.extend(b.get("methods", []) or [])
+            rank = b.get("rank", "A")
+            if rank not in sev:
+                continue
+            name = b.get("name", "?")
+            yield new_finding(
+                dimension="maintainability", rule=f"radon.cc-{rank}", source="radon",
+                severity=sev[rank], confidence="high", effort="M", language="python",
+                title=f"Cyclomatic complexity {b.get('complexity')} (rank {rank}): {name}",
+                description=f"{b.get('type','function')} `{name}` has cyclomatic complexity "
+                            f"{b.get('complexity')} (radon rank {rank}).",
+                recommendation="Split into smaller functions along the branch structure; "
+                               "cover the branches with tests before refactoring.",
+                locations=[loc(relpath(path, repo), b.get("lineno"), b.get("endline"))],
+                snippet_key=f"{name}:cc")
+
+
+def parse_radon_mi(data, repo):
+    for path, d in (data or {}).items():
+        if not isinstance(d, dict) or d.get("rank") != "C":
+            continue
+        yield new_finding(
+            dimension="maintainability", rule="radon.mi-C", source="radon",
+            severity="P3", confidence="medium", effort="M", language="python",
+            title=f"Low maintainability index ({d.get('mi', 0):.1f}): {relpath(path, repo)}",
+            description=f"radon maintainability index {d.get('mi', 0):.1f} (rank C, below 10).",
+            recommendation="Reduce size and complexity of this module; see the hotspot table.",
+            locations=[loc(relpath(path, repo))], snippet_key="mi")
+
+
+_CARGO_DENY_ADVISORY = {"vulnerability": "P1", "unsound": "P1", "unmaintained": "P2",
+                        "yanked": "P2", "notice": "P3"}
+
+
+def parse_cargo_deny(text, repo):
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            d = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if d.get("type") != "diagnostic":
+            continue
+        f = d.get("fields", {}) or {}
+        code = f.get("code") or "diagnostic"
+        krate = "crate"
+        for g in f.get("graphs", []) or []:
+            k = (g.get("Krate") or {})
+            if k.get("name"):
+                krate = f"{k['name']} {k.get('version', '')}".strip()
+                break
+        if code in _CARGO_DENY_ADVISORY:
+            dim, sev = "security", _CARGO_DENY_ADVISORY[code]
+        else:
+            dim, sev = "dependencies", ("P2" if f.get("severity") == "error" else "P3")
+        yield new_finding(
+            dimension=dim, rule=f"cargo-deny.{code}", source="cargo-deny",
+            severity=sev, confidence="high", effort="S", language="rust",
+            title=f"{code}: {krate} — {f.get('message', '')[:120]}",
+            description=f.get("message", ""),
+            recommendation="See `cargo deny check` output; adjust deny.toml only with justification.",
+            locations=[loc("Cargo.lock")], snippet_key=f"{code}:{krate}")
+
+
+_PMD_DIM = {"Security": "security", "Error Prone": "correctness",
+            "Performance": "performance", "Multithreading": "correctness"}
+
+
+def parse_pmd(data, repo):
+    sev = {1: "P1", 2: "P2"}
+    for fl in data.get("files", []) or []:
+        path = relpath(fl.get("filename", ""), repo)
+        for v in fl.get("violations", []) or []:
+            rule = v.get("rule", "pmd")
+            yield new_finding(
+                dimension=_PMD_DIM.get(v.get("ruleset", ""), "readability"),
+                rule=f"pmd.{rule}", source="pmd",
+                severity=sev.get(v.get("priority"), "P3"), confidence="high", effort="XS",
+                language="java",
+                title=f"{rule}: {v.get('description', '')[:140]}",
+                description=v.get("description", ""),
+                recommendation=v.get("externalInfoUrl") or "See PMD rule documentation.",
+                locations=[loc(path, v.get("beginline"), v.get("endline"))],
+                snippet_key=f"{rule}@{v.get('beginline')}")
+
+
+def parse_jscpd(data, repo):
+    total = ((data.get("statistics") or {}).get("total") or {})
+    dups = sorted(data.get("duplicates", []) or [], key=lambda d: -(d.get("lines") or 0))
+    if not dups:
+        return
+    pct = float(total.get("percentage") or 0)
+    sev = "P2" if pct >= 10 else "P3" if pct >= 3 else "INFO"
+    pairs = [f"{relpath(d['firstFile']['name'], repo)}:{d['firstFile'].get('start')} ↔ "
+             f"{relpath(d['secondFile']['name'], repo)}:{d['secondFile'].get('start')} "
+             f"({d.get('lines')} lines)" for d in dups[:10]]
+    yield new_finding(
+        dimension="maintainability", rule="jscpd.duplication", source="jscpd",
+        severity=sev, confidence="high", effort="M",
+        title=f"Duplicated code: {pct:.1f}% of lines in {len(dups)} clone pairs",
+        description=f"{total.get('duplicatedLines', 0)} duplicated lines across "
+                    f"{total.get('sources', 0)} files ({pct:.1f}%). Largest pairs:\n- "
+                    + "\n- ".join(pairs),
+        recommendation="Extract the shared logic where the pairs are structural, not incidental.",
+        locations=[loc(relpath(d["firstFile"]["name"], repo), d["firstFile"].get("start"),
+                       d["firstFile"].get("end")) for d in dups[:5]],
+        snippet_key="census:jscpd")
+
+
+VULTURE_RE = re.compile(r"^(.+?):(\d+): (unused (\w+)|unreachable code)\b(.*)$")
+
+
+def parse_vulture(text, repo):
+    for line in text.splitlines():
+        m = VULTURE_RE.match(line.strip())
+        if not m:
+            continue
+        path, line_no, what, kind, rest = m.groups()
+        kind = f"unused-{kind}" if kind else "unreachable-code"
+        yield new_finding(
+            dimension="maintainability", rule=f"vulture.{kind}", source="vulture",
+            severity="P3", confidence="medium", effort="XS", language="python",
+            title=f"{what}{rest[:100]}", description=line.strip(),
+            recommendation="Delete if truly unused; vulture cannot see dynamic dispatch, so verify.",
+            locations=[loc(relpath(path, repo), int(line_no))],
+            snippet_key=f"{kind}:{rest.strip()[:60]}")
+
+
+def parse_knip(data, repo):
+    files = data.get("files", []) or []
+    if files:
+        yield new_finding(
+            dimension="maintainability", rule="knip.unused-files", source="knip",
+            severity="P3", confidence="medium", effort="S",
+            title=f"{len(files)} unused files",
+            description="Files not reachable from any entry point:\n- "
+                        + "\n- ".join(relpath(f, repo) for f in files[:30]),
+            recommendation="Delete, or add to knip entry points if loaded dynamically.",
+            locations=[loc(relpath(f, repo)) for f in files[:10]], snippet_key="census:files")
+    cats = {"exports": ("maintainability", "unused-exports"),
+            "types": ("maintainability", "unused-types"),
+            "dependencies": ("dependencies", "unused-dependencies"),
+            "devDependencies": ("dependencies", "unused-dev-dependencies")}
+    for key, (dim, kind) in cats.items():
+        items = []
+        for issue in data.get("issues", []) or []:
+            for it in issue.get(key, []) or []:
+                items.append((relpath(issue.get("file", ""), repo), it.get("name"), it.get("line")))
+        if not items:
+            continue
+        yield new_finding(
+            dimension=dim, rule=f"knip.{kind}", source="knip",
+            severity="P3", confidence="medium", effort="S",
+            title=f"{len(items)} {kind.replace('-', ' ')}",
+            description="\n- ".join([f"{kind.replace('-', ' ')}:"]
+                                    + [f"{p}: {n}" for p, n, _ in items[:30]]),
+            recommendation="Remove, or mark as intentional in knip config.",
+            locations=[loc(p, ln) for p, _, ln in items[:10]], snippet_key=f"census:{key}")
+
+
+_GOLANGCI_STYLE = {"gofmt", "goimports", "gofumpt", "revive", "stylecheck", "misspell",
+                   "lll", "whitespace", "godot", "wsl", "nlreturn", "gci", "gocritic"}
+
+
+def parse_golangci(data, repo):
+    for d in data.get("Issues", []) or []:
+        linter = d.get("FromLinter", "lint")
+        pos = d.get("Pos", {}) or {}
+        if linter == "gosec":
+            dim, sev = "security", "P1"
+        elif linter in _GOLANGCI_STYLE:
+            dim, sev = "readability", "P3"
+        else:
+            dim, sev = "correctness", "P2"
+        yield new_finding(
+            dimension=dim, rule=f"golangci-lint.{linter}", source="golangci-lint",
+            severity=sev, confidence="high", effort="S", language="go",
+            title=f"{linter}: {d.get('Text', '')[:140]}", description=d.get("Text", ""),
+            recommendation="See the linter's documentation for this check.",
+            locations=[loc(relpath(pos.get("Filename", ""), repo), pos.get("Line"),
+                           snippet="\n".join(d.get("SourceLines", []) or []))],
+            snippet_key=f"{linter}:{d.get('Text', '')[:80]}")
+
+
+CLANG_TIDY_RE = re.compile(r"^(.+?):(\d+):\d+: (warning|error): (.*?)\s*\[([\w.-]+)\]$")
+
+
+def parse_clang_tidy(text, repo):
+    for line in text.splitlines():
+        m = CLANG_TIDY_RE.match(line.strip())
+        if not m:
+            continue
+        path, line_no, level, msg, check = m.groups()
+        fam = check.split("-", 1)[0]
+        if fam in ("bugprone", "clang") or level == "error":
+            dim, sev = "correctness", "P1"
+        elif fam == "performance":
+            dim, sev = "performance", "P2"
+        elif fam in ("readability", "modernize"):
+            dim, sev = "readability", "P3"
+        else:
+            dim, sev = "correctness", "P2"
+        yield new_finding(
+            dimension=dim, rule=f"clang-tidy.{check}", source="clang-tidy",
+            severity=sev, confidence="high", effort="S",
+            title=f"{check}: {msg[:140]}", description=msg,
+            recommendation="See the clang-tidy check documentation.",
+            locations=[loc(relpath(path, repo), int(line_no))],
+            snippet_key=f"{check}:{msg[:80]}")
+
+
+COPYLEFT_RE = re.compile(r"\b(A?GPL|LGPL|SSPL|EUPL|OSL|CDDL|MPL)\b", re.I)
+
+
+def license_findings(source, entries, lockfile, language=None):
+    """entries: (package, license expression). Inventory + copyleft/unknown flags."""
+    from collections import Counter
+    if not entries:
+        return
+    breakdown = Counter((lic or "UNKNOWN").strip() or "UNKNOWN" for _, lic in entries)
+    yield new_finding(
+        dimension="dependencies", rule=f"{source}.inventory", source=source,
+        severity="INFO", confidence="high", effort="XS", language=language,
+        title=f"License inventory: {len(entries)} packages",
+        description="\n- ".join(["Breakdown:"] + [f"{lic}: {n}" for lic, n in breakdown.most_common()]),
+        recommendation="Confirm every license is compatible with the project's own license.",
+        locations=[loc(lockfile)], snippet_key="census:licenses")
+    for pkg, lic in entries:
+        lic = (lic or "").strip()
+        if not lic or lic.upper() in ("UNKNOWN", "UNLICENSED", "UNLICENSE"):
+            yield new_finding(
+                dimension="dependencies", rule=f"{source}.unknown-license", source=source,
+                severity="P2", confidence="high", effort="S", language=language,
+                title=f"Unknown or missing license: {pkg}",
+                description=f"{pkg} reports license {lic or 'none'!r}.",
+                recommendation="Determine the license from the package source; replace if unlicensed.",
+                locations=[loc(lockfile)], snippet_key=pkg)
+        elif COPYLEFT_RE.search(lic):
+            yield new_finding(
+                dimension="dependencies", rule=f"{source}.copyleft", source=source,
+                severity="P1", confidence="medium" if " OR " in lic.upper() else "high",
+                effort="M", language=language,
+                title=f"Copyleft-family license: {pkg} ({lic})",
+                description=f"{pkg} is licensed {lic}. Copyleft terms may conflict with "
+                            "the project's license or distribution model."
+                            + (" Dual-licensed: choose and record the permissive option."
+                               if " OR " in lic.upper() else ""),
+                recommendation="Check compatibility with the project license; replace or "
+                               "isolate the dependency if incompatible.",
+                locations=[loc(lockfile)], snippet_key=pkg)
+
+
+def parse_license_checker(data, repo):
+    entries = []
+    for pkg, d in (data or {}).items():
+        lic = d.get("licenses")
+        entries.append((pkg, ", ".join(lic) if isinstance(lic, list) else str(lic or "")))
+    yield from license_findings("license-checker", entries, "package.json", "javascript")
+
+
+def parse_pip_licenses(data, repo):
+    entries = [(f"{d.get('Name')}=={d.get('Version')}", d.get("License", "")) for d in data or []]
+    for f in license_findings("pip-licenses", entries, "requirements.txt", "python"):
+        if f["rule"].endswith(".inventory"):
+            f["description"] += ("\n\nInventory reflects the current Python environment, "
+                                 "not necessarily the repo's declared dependencies.")
+        yield f
+
+
+def parse_go_licenses(text, repo):
+    entries = []
+    for line in text.splitlines():
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) >= 3 and "/" in parts[0]:
+            entries.append((parts[0], parts[2]))
+    yield from license_findings("go-licenses", entries, "go.mod", "go")
+
+
+def parse_ruff_format(text, repo):
+    files = [l.split(":", 1)[1].strip() for l in text.splitlines() if l.startswith("Would reformat")]
+    if not files:
+        return
+    yield new_finding(
+        dimension="readability", rule="ruff.format-check", source="ruff",
+        severity="P3", confidence="high", effort="XS", language="python",
+        title=f"{len(files)} files not formatted per ruff format",
+        description="Files `ruff format --check` would change:\n- "
+                    + "\n- ".join(relpath(f, repo) for f in files[:30]),
+        recommendation="Run `ruff format` once and enforce it in CI/pre-commit.",
+        locations=[loc(relpath(f, repo)) for f in files[:10]], snippet_key="census:format")
+
+
+SWIFT_FORMAT_RE = re.compile(r"^(.+?):(\d+):\d+: (warning|error): (?:\[(\w+)\] )?(.*)$")
+
+
+def parse_swift_format(text, repo):
+    for line in text.splitlines():
+        m = SWIFT_FORMAT_RE.match(line.strip())
+        if not m:
+            continue
+        path, line_no, _level, rule, msg = m.groups()
+        rule = rule or "lint"
+        yield new_finding(
+            dimension="readability", rule=f"swift-format.{rule}", source="swift-format",
+            severity="P3", confidence="high", effort="XS", language="swift",
+            title=f"{rule}: {msg[:140]}", description=msg,
+            recommendation="Run `swift-format format -i` or fix per rule.",
+            locations=[loc(relpath(path, repo), int(line_no))],
+            snippet_key=f"{rule}@{line_no}")
+
+
 PARSERS = {
     "ruff.json": ("json", parse_ruff), "mypy.json": ("text", parse_mypy),
+    "ruff-format.txt": ("text", parse_ruff_format),
+    "radon-cc.json": ("json", parse_radon_cc), "radon-mi.json": ("json", parse_radon_mi),
+    "vulture.txt": ("text", parse_vulture), "pip-licenses.json": ("json", parse_pip_licenses),
+    "jscpd.json": ("json", parse_jscpd), "knip.json": ("json", parse_knip),
+    "license-checker.json": ("json", parse_license_checker),
+    "golangci-lint.json": ("json", parse_golangci), "go-licenses.csv": ("text", parse_go_licenses),
+    "cargo-deny.json": ("text", parse_cargo_deny), "pmd.json": ("json", parse_pmd),
+    "clang-tidy.txt": ("text", parse_clang_tidy), "swift-format.txt": ("text", parse_swift_format),
     "bandit.json": ("json", parse_bandit), "semgrep.json": ("json", parse_semgrep),
     "eslint.json": ("json", parse_eslint), "tsc.txt": ("text", parse_tsc),
     "madge.json": ("json", parse_madge), "gosec.json": ("json", parse_gosec),

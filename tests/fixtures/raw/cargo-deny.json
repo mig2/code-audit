@@ -1,0 +1,5 @@
+{"type":"summary","fields":{"advisories":{"errors":1,"warnings":1}}}
+{"type":"diagnostic","fields":{"code":"vulnerability","severity":"error","message":"Tokio reactor may leak memory","graphs":[{"Krate":{"name":"tokio","version":"1.20.0"}}],"advisory":{"id":"RUSTSEC-2023-0001"}}}
+{"type":"diagnostic","fields":{"code":"unmaintained","severity":"warning","message":"crate is unmaintained","graphs":[{"Krate":{"name":"ansi_term","version":"0.12.1"}}]}}
+{"type":"diagnostic","fields":{"code":"rejected","severity":"error","message":"failed to satisfy license requirements","graphs":[{"Krate":{"name":"ring","version":"0.16.20"}}]}}
+{"type":"diagnostic","fields":{"code":"duplicate","severity":"warning","message":"found 2 duplicate entries for crate 'syn'","graphs":[{"Krate":{"name":"syn","version":"1.0.0"}}]}}

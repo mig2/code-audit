@@ -42,8 +42,8 @@ def test_failed_scan_is_recorded_as_skipped(tmp_path, monkeypatch):
     (tmp_path / "p.json").write_text(json.dumps(profile))
     (tmp_path / "t.json").write_text(json.dumps(tools))
     out = tmp_path / "audit"
-    monkeypatch.setattr(run_scanners, "cmds_for", lambda *a, **k: [
-        ("ruff", "readability", [sys.executable, "-c", "import sys; sys.exit(2)"], "json", tmp_path)])
+    monkeypatch.setattr(run_scanners, "cmds_for", lambda *a, **k: ([
+        ("ruff", "readability", [sys.executable, "-c", "import sys; sys.exit(2)"], "json", tmp_path)], []))
     monkeypatch.setattr(sys, "argv", ["run_scanners.py", "--profile", str(tmp_path / "p.json"),
                                       "--tools", str(tmp_path / "t.json"), "--out", str(out)])
     run_scanners.main()

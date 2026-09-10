@@ -10,18 +10,19 @@ running gunicorn/uvicorn.
 
 | Purpose | Tool | Invocation | Output |
 |---|---|---|---|
-| Lint | ruff | `ruff check --output-format json .` | JSON |
+| Lint | ruff | `ruff check --output-format json --exit-zero .` | JSON |
 | Format conformance | ruff | `ruff format --check .` | text (count) |
-| Types | mypy | `mypy --output json .` (fallback: text) | JSON lines |
-| SAST | bandit | `bandit -r SRC -f json` | JSON |
+| Types | mypy | `mypy --output json --ignore-missing-imports .` (fallback: text) | JSON lines |
+| SAST | bandit | `bandit -r . -f json -x ./tests,./test,./.venv,./venv --exit-zero` | JSON |
 | SAST (rules) | semgrep | `semgrep scan --config p/python --config p/security-audit --json` | JSON |
 | Dep vulns | pip-audit | `pip-audit -f json` (needs resolvable env; else `-r requirements.txt`) | JSON |
 | Dep vulns (alt) | osv-scanner | `osv-scanner scan --format json -r .` | JSON |
-| Licenses | pip-licenses | `pip-licenses --format=json --with-urls` (env-dependent) | JSON |
-| Complexity | radon | `radon cc -j SRC` / `radon mi -j SRC` | JSON |
+| Licenses | pip-licenses | `pip-licenses --format=json` (inventories the current env, not the repo's manifest) | JSON |
+| Complexity | radon | `radon cc -j .` / `radon mi -j .` | JSON |
 | Coverage | coverage/pytest-cov | `pytest --cov --cov-report=json` **only with user approval to run tests** | JSON |
 | Secrets | gitleaks | `gitleaks detect --report-format json` | JSON |
-| Dead code | vulture | `vulture SRC --min-confidence 80` | text |
+| Dead code | vulture | `vulture . --min-confidence 80 --exclude .venv,venv,node_modules,.audit` | text |
+| Duplication | jscpd | `npx jscpd . --reporters json --output raw/jscpd --silent --ignore <vendored globs>` (all languages) | JSON |
 
 Local install: `pipx install X` or `pip install --user X` or `uv tool install X`.
 

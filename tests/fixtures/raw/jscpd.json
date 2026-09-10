@@ -1,0 +1,11 @@
+{
+  "statistics": {"total": {"lines": 2000, "sources": 40, "clones": 2, "duplicatedLines": 90, "percentage": 4.5}},
+  "duplicates": [
+    {"format": "typescript", "lines": 30, "fragment": "...",
+     "firstFile": {"name": "/r/src/a.ts", "start": 10, "end": 40},
+     "secondFile": {"name": "/r/src/b.ts", "start": 5, "end": 35}},
+    {"format": "typescript", "lines": 60, "fragment": "...",
+     "firstFile": {"name": "/r/src/c.ts", "start": 1, "end": 61},
+     "secondFile": {"name": "/r/src/d.ts", "start": 100, "end": 160}}
+  ]
+}

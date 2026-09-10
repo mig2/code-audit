@@ -26,6 +26,7 @@ T = {
     "pip-audit":  (["python"], "dep-vulns", ["pip-audit", "--version"], "pipx install pip-audit"),
     "radon":      (["python"], "complexity", ["radon", "--version"], "pipx install radon"),
     "vulture":    (["python"], "dead-code", ["vulture", "--version"], "pipx install vulture (optional)"),
+    "pip-licenses": (["python"], "licenses (current env)", ["pip-licenses", "--version"], "pipx install pip-licenses"),
 
     "node":       (["typescript", "javascript"], "runtime", ["node", "--version"], "nvm/volta (user-level)"),
     "eslint":     (["typescript", "javascript"], "lint", ["npx", "--yes", "eslint", "--version"], "npx (auto) / repo devDependency"),
@@ -52,12 +53,12 @@ T = {
     "xcodebuild":  (["swift"], "static-analyze (macOS only)", ["xcodebuild", "-version"], "Xcode (macOS only)"),
 
     "cppcheck":    (["c", "cpp"], "static-analysis", ["cppcheck", "--version"], "distro pkg or build to ~/.local (root may be needed)"),
-    "clang-tidy":  (["c", "cpp"], "static-analysis", ["clang-tidy", "--version"], "distro pkg / llvm release tarball to ~/.local"),
+    "clang-tidy":  (["c", "cpp"], "static-analysis (needs compile_commands.json + run-clang-tidy)", ["clang-tidy", "--version"], "distro pkg / llvm release tarball to ~/.local"),
 
     "java":        (["java"], "runtime", ["java", "-version"], "sdkman (user-level)"),
     "pmd":         (["java"], "lint", ["pmd", "--version"], "release zip to ~/.local/share/code-audit/tools"),
-    "spotbugs":    (["java"], "bug-patterns (needs build)", ["spotbugs", "-version"], "release zip to ~/.local/share/code-audit/tools"),
-    "checkstyle":  (["java"], "style", ["checkstyle", "--version"], "release jar to ~/.local/share/code-audit/tools"),
+    "spotbugs":    (["java"], "bug-patterns (manual, needs build)", ["spotbugs", "-version"], "release zip to ~/.local/share/code-audit/tools"),
+    "checkstyle":  (["java"], "style (manual)", ["checkstyle", "--version"], "release jar to ~/.local/share/code-audit/tools"),
 
     "gh":          (["*"], "issue filing (GitHub)", ["gh", "--version"], "release binary to ~/.local/bin"),
     "glab":        (["*"], "issue filing (GitLab)", ["glab", "--version"], "release binary to ~/.local/bin"),

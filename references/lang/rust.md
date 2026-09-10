@@ -10,15 +10,15 @@ review weight. `#![no_std]` flags embedded context (adjust expectations).
 | Purpose | Tool | Invocation | Notes |
 |---|---|---|---|
 | Lint | clippy | `cargo clippy --all-targets --message-format=json` | repo's lint config respected |
-| Lint (audit tier) | clippy pedantic | `cargo clippy --all-targets --message-format=json -- -W clippy::pedantic -W clippy::nursery` | **report separately**; advisory census, not findings parity |
-| Compiler | cargo check | `cargo check --all-targets --message-format=json` | warnings included |
+| Lint (audit tier) | clippy pedantic | `cargo clippy --all-targets --message-format=json -- -W clippy::pedantic -W clippy::nursery` (manual) | **report separately**; advisory census, not findings parity |
+| Compiler | cargo check | `cargo check --all-targets --message-format=json` (manual — needs a build) | warnings included |
 | Dep vulns | cargo-audit | `cargo audit --json` | RustSec DB; needs network unless DB cached |
 | Deps policy | cargo-deny | `cargo deny check --format json` (licenses, bans, advisories, sources) | reads/needs `deny.toml` — if absent, run with a default config from assets and note it |
 | Licenses | cargo-deny | covered above | |
-| Unsafe census | cargo-geiger | `cargo geiger --output-format Json` | optional; counts also derivable by grep |
-| UB testing | miri | `cargo +nightly miri test` — **user approval; slow; nightly** | only when unsafe code + tests exist |
+| Unsafe census | cargo-geiger | `cargo geiger --output-format Json` (manual — not in the tool matrix) | optional; `metrics.json` census counts `unsafe` blocks by grep |
+| UB testing | miri | `cargo +nightly miri test` (manual — not in the tool matrix) — **user approval; slow; nightly** | only when unsafe code + tests exist |
 | Secrets | gitleaks | `gitleaks detect --report-format json` | JSON |
-| Coverage | cargo-llvm-cov | `cargo llvm-cov --json` — user approval | |
+| Coverage | cargo-llvm-cov | `cargo llvm-cov --json` (manual — not in the tool matrix) — user approval | |
 
 Installs: `rustup component add clippy`, `cargo install cargo-audit cargo-deny` →
 `~/.cargo/bin`. Pure no-root.

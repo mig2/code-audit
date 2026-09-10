@@ -1,0 +1,4 @@
+github.com/spf13/cobra,https://github.com/spf13/cobra/blob/v1.8.0/LICENSE.txt,Apache-2.0
+github.com/example/copyleft,https://github.com/example/copyleft/blob/main/LICENSE,AGPL-3.0
+github.com/example/nolicense,Unknown,Unknown
+W0101 12:00:00 some warning line without commas

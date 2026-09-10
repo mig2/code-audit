@@ -1,0 +1,5 @@
+{
+  "/r/src/app.py": {"mi": 62.4, "rank": "A"},
+  "/r/src/legacy.py": {"mi": 7.9, "rank": "C"},
+  "/r/src/broken.py": {"error": "invalid syntax"}
+}

@@ -18,10 +18,10 @@ server framework deps + Dockerfile/start script.
 | SAST | semgrep | `semgrep scan --config p/typescript --config p/javascript --config p/security-audit --json` | JSON |
 | Dep vulns | npm/pnpm/yarn audit | `npm audit --json` (match the repo's package manager) | JSON |
 | Dep vulns (alt) | osv-scanner | `osv-scanner scan --format json -r .` | JSON |
-| Licenses | license-checker | `npx license-checker --json` | JSON |
-| Dead code/exports | knip | `npx knip --reporter json` | JSON |
-| Import cycles | madge | `npx madge --circular --json SRC` | JSON |
-| Duplication | jscpd | `npx jscpd --reporters json SRC` | JSON |
+| Licenses | license-checker | `npx license-checker --json` (needs package.json) | JSON |
+| Dead code/exports | knip | `npx knip --reporter json --no-exit-code` (needs package.json) | JSON |
+| Import cycles | madge | `npx madge --circular --json .` | JSON |
+| Duplication | jscpd | `npx jscpd . --reporters json --output raw/jscpd --silent --ignore <vendored globs>` (all languages) | JSON |
 | Secrets | gitleaks | `gitleaks detect --report-format json` | JSON |
 | Coverage | repo's runner | `npx jest --coverage --coverageReporters=json-summary` / vitest equivalent — **user approval to run tests** | JSON |
 

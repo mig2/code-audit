@@ -15,16 +15,17 @@ and CMake exists, generate via `cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -B buil
 | Purpose | Tool | Invocation | Notes |
 |---|---|---|---|
 | Static analysis | cppcheck | `cppcheck --enable=warning,style,performance,portability --inconclusive --xml --quiet . 2> raw/cppcheck.xml` (`--enable=all` adds `unusedFunction`/`missingInclude` noise; enable per repo if wanted) | no compile DB needed |
-| Static analysis | clang-tidy | `clang-tidy -p build-audit --checks=<set> $(files)` via `run-clang-tidy` | needs compile_commands.json |
+| Static analysis | clang-tidy | `run-clang-tidy -p <dir> -quiet` — automatic when `compile_commands.json` is in the scope root or `build/`; otherwise recorded as a coverage gap | needs compile_commands.json + `run-clang-tidy` |
 | Compiler warnings | gcc/clang | rebuild w/ `-Wall -Wextra -Wpedantic -Wconversion -Wshadow` (out-of-tree; user approval) | text |
 | Sanitizers | ASan/UBSan/TSan | test-suite run with `-fsanitize=address,undefined` (separate build; TSan separately) — **user approval, big runtime cost** | text |
 | SAST | semgrep | `semgrep scan --config p/c --config p/cpp --config p/security-audit --json` | JSON |
 | Dep vulns | osv-scanner | conan/vcpkg manifests if present; vendored deps need manual inventory | JSON |
 | Secrets | gitleaks | `gitleaks detect --report-format json` | JSON |
-| Include hygiene | include-what-you-use | optional, needs compile DB | text |
+| Include hygiene | include-what-you-use | optional, needs compile DB (manual — not in the tool matrix) | text |
 
-clang-tidy check set: `bugprone-*, cert-*, concurrency-*, misc-*, performance-*` plus
-**[C++]** `modernize-*, cppcoreguidelines-*` (narrate, don't dump — these are noisy;
+clang-tidy runs with the repo's `.clang-tidy` (or clang-tidy defaults). For an audit
+profile beyond that, re-run manually with `-checks=bugprone-*,cert-*,concurrency-*,misc-*,performance-*`
+plus **[C++]** `modernize-*,cppcoreguidelines-*` (narrate, don't dump — these are noisy;
 aggregate by check into single findings with counts). No-root installs are the weak
 point here: use distro-provided binaries if present; else record the gap.
 

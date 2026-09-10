@@ -1,0 +1,14 @@
+{
+  "Issues": [
+    {"FromLinter": "errcheck", "Text": "Error return value of `f.Close` is not checked",
+     "Severity": "", "SourceLines": ["\tf.Close()"],
+     "Pos": {"Filename": "internal/io.go", "Offset": 120, "Line": 22, "Column": 9}},
+    {"FromLinter": "gosec", "Text": "G101: Potential hardcoded credentials",
+     "Severity": "", "SourceLines": ["\tpassword := \"x\""],
+     "Pos": {"Filename": "cmd/main.go", "Offset": 0, "Line": 9, "Column": 2}},
+    {"FromLinter": "revive", "Text": "exported function Foo should have comment",
+     "Severity": "", "SourceLines": ["func Foo() {}"],
+     "Pos": {"Filename": "pkg/foo.go", "Offset": 0, "Line": 3, "Column": 1}}
+  ],
+  "Report": {"Linters": []}
+}

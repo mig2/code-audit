@@ -9,8 +9,8 @@ flags in manifest. Service signal: Vapor/Hummingbird deps.
 
 | Purpose | Tool | Invocation | Platform |
 |---|---|---|---|
-| Lint | SwiftLint | `swiftlint lint --reporter json` | macOS; Linux if installed |
-| Format conformance | swift-format | `swift-format lint -r SRC` | both (if toolchain) |
+| Lint | SwiftLint | `swiftlint lint --reporter json --quiet` | macOS; Linux if installed |
+| Format conformance | swift-format | `swift-format lint -r .` (diagnostics on stderr) | both (if toolchain) |
 | Compiler diagnostics | swift build | `swift build -Xswiftc -warnings-as-errors 2>&1` (SwiftPM only) | both w/ toolchain |
 | Static analysis | xcodebuild | `xcodebuild analyze -scheme S -quiet` | **macOS only** |
 | Dep vulns | osv-scanner | `osv-scanner scan --format json -r .` (reads Package.resolved) | both |

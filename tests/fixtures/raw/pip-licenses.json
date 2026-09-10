@@ -1,0 +1,5 @@
+[
+  {"Name": "requests", "Version": "2.31.0", "License": "Apache Software License"},
+  {"Name": "pyqt5", "Version": "5.15.9", "License": "GPL v3"},
+  {"Name": "weird", "Version": "0.0.1", "License": "UNKNOWN"}
+]

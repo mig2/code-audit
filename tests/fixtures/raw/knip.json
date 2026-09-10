@@ -1,0 +1,12 @@
+{
+  "files": ["/r/src/legacy/old.ts", "/r/src/unused.ts"],
+  "issues": [
+    {"file": "/r/src/index.ts",
+     "dependencies": [{"name": "lodash"}],
+     "devDependencies": [],
+     "unlisted": [],
+     "exports": [{"name": "helper", "line": 12, "col": 14}, {"name": "other", "line": 30, "col": 1}],
+     "types": [{"name": "Foo", "line": 3, "col": 13}],
+     "duplicates": []}
+  ]
+}
