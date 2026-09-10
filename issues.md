@@ -163,8 +163,15 @@
 - **Commit:** b95e7d8
 - **Closed:** 2026-09-10
 
-## Open
-
 ### #22 — Restructure into a `code` plugin bundle: `skills/audit` and `skills/calibration`
 - **Labels:** enhancement, setup
 - **Description:** Convert to a Claude Code plugin (`.claude-plugin/plugin.json`, `skills/<name>/SKILL.md`) so both skills are invoked as `/code:audit` and `/code:calibration`. Retire or wrap `install.sh`. Do after the audit fixes land.
+- **Resolution:** Plugin manifest added; audit skill moved to `skills/audit/`; tests repointed; `install.sh` now symlinks `~/.claude/skills/code` to the clone (auto-loaded as `code@skills-dir`) and removes the legacy copy.
+- **Commit:** 6a1e3fe
+- **Closed:** 2026-09-10
+
+## Open
+
+### #24 — Add the `code:calibration` skill: proportionality and owner-expertise assessment
+- **Labels:** enhancement
+- **Description:** New skill at `skills/calibration/` producing per-area over-/under-built verdicts, a required-owner level and an evident-author level on an L0–L4 ladder (L0 = AI-assisted non-engineer), and a gap plan. Reuses an existing `.audit/` run; one stdlib signals script; references `ladder.md`, `signals.md`, `report.md`.
