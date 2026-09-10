@@ -114,11 +114,28 @@
 - **Commit:** cf3f77b
 - **Closed:** 2026-09-10
 
-## Open
-
 ### #16 — Documented pipeline flags that do not exist or do not work
 - **Labels:** bug, documentation
 - **Description:** `--project NAME` is not implemented anywhere; `--path` is ignored by `run_scanners.py`; compare mode has no `comparison.html`/Outliers; `--rollup` has no HTML output.
+- **Resolution:** `run_scanners.py` runs inside the profile's recorded `scope`; SKILL.md documents per-project audits via `--path`/`--out`. Compare mode emits Outliers and `comparison.html`; rollup emits `report.html`; `md_html` renders headings and tables.
+- **Commit:** ae728e8
+- **Closed:** 2026-09-10
+
+### #19 — Reference and README drift
+- **Labels:** documentation
+- **Description:** README output tree is the old flat layout; `osv-scanner -r` syntax invalid in five lang files; GitLab epic ladder described but unimplemented; `check_tools --fast` undocumented; lang-file invocations diverge from `run_scanners` argv.
+- **Resolution:** README, SKILL.md, issue-filing.md, portfolio.md, java.md, c-cpp.md corrected. The osv-scanner syntax turned out to be valid on v2.x and was left alone.
+- **Commit:** 8e623ba
+- **Closed:** 2026-09-10
+
+### #20 — Fragility: install_tools.sh asset selection, render_report partial-metrics crash, skipped-tool inflation, dead code
+- **Labels:** bug, tooling, cleanup
+- **Description:** Release-asset grep can pick `.sig` files, no arm64 mapping, `curl` unchecked; `render_report` crashes on metrics without `source_loc`; `run_scanners` records all unavailable tools as skipped regardless of `--only`; assorted dead code.
+- **Resolution:** All items addressed; exit-with-no-output is now recorded as a failed scan; `audit.date` stamped by normalize; tracked `.pyc` files untracked. Tests added.
+- **Commit:** bf61a63
+- **Closed:** 2026-09-10
+
+## Open
 
 ### #17 — Scanner outputs written but never parsed; tools probed but never run
 - **Labels:** enhancement, tooling
@@ -127,14 +144,6 @@
 ### #18 — `metrics.py` does not produce the inputs the dimension rubrics assume
 - **Labels:** enhancement
 - **Description:** No function-size distribution, regex-count "complexity", no duplication or license inventory, no coverage-by-area, cycle detection only for TS. Dead TODO loop and a redundant second file walk.
-
-### #19 — Reference and README drift
-- **Labels:** documentation
-- **Description:** README output tree is the old flat layout; `osv-scanner -r` syntax invalid in five lang files; GitLab epic ladder described but unimplemented; `check_tools --fast` undocumented; lang-file invocations diverge from `run_scanners` argv.
-
-### #20 — Fragility: install_tools.sh asset selection, render_report partial-metrics crash, skipped-tool inflation, dead code
-- **Labels:** bug, tooling, cleanup
-- **Description:** Release-asset grep can pick `.sig` files, no arm64 mapping, `curl` unchecked; `render_report` crashes on metrics without `source_loc`; `run_scanners` records all unavailable tools as skipped regardless of `--only`; assorted dead code.
 
 ### #21 — Add tests for `normalize_findings` parsers, `metrics`, `render_report`, `detect_repo`
 - **Labels:** enhancement, tooling
