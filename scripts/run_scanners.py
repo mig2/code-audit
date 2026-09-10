@@ -20,7 +20,20 @@ import subprocess
 import time
 from pathlib import Path
 
-NETWORK_TOOLS = {"pip-audit", "osv-scanner", "cargo-audit", "npm-audit", "govulncheck"}
+PURPOSE_DIM = [
+    ("secret", "security"), ("sast", "security"),
+    ("dep-vuln", "dependencies"), ("licens", "dependencies"), ("deps-policy", "dependencies"),
+    ("lint", "readability"), ("format", "readability"), ("style", "readability"),
+    ("types", "correctness"), ("static-analy", "correctness"), ("bug-pattern", "correctness"),
+    ("vet", "correctness"), ("complexity", "maintainability"), ("duplication", "maintainability"),
+    ("dead-", "maintainability"), ("import-cycles", "design"),
+]
+
+
+def purpose_dim(purpose):
+    """Dimension a tool's registry purpose serves; None for infrastructure (git, runtimes)."""
+    p = (purpose or "").lower()
+    return next((d for k, d in PURPOSE_DIM if k in p), None)
 
 
 def cmds_for(profile, tools, only, offline):
@@ -47,9 +60,7 @@ def cmds_for(profile, tools, only, offline):
             if l in langs:
                 cfgs += ["--config", c]
         cfgs += ["--config", "p/security-audit"]
-        if offline:
-            cfgs = ["--config", "auto"]  # still networky; effectively skip below
-        if not offline:
+        if not offline:  # registry rulesets are fetched from the network
             A(("semgrep", "security",
                ["semgrep", "scan", *cfgs, "--json", "--quiet", "--timeout", "60"],
                "json", repo))
@@ -153,11 +164,12 @@ def main():
 
     manifest = {"ran": [], "skipped": []}
     plan = cmds_for(profile, tools, only, args.offline)
-    # record skips: tools relevant but unavailable
+    # coverage gaps: scanners that serve a wanted dimension but are not installed
     for name, t in tools["tools"].items():
-        if not t["available"] and not t.get("via_npx"):
-            manifest["skipped"].append({"tool": name, "reason": "not installed",
-                                        "purpose": t["purpose"]})
+        dim = purpose_dim(t.get("purpose"))
+        if dim and not t["available"] and not t.get("via_npx") and (not only or dim in only):
+            manifest["skipped"].append({"tool": name, "dimension": dim,
+                                        "reason": "not installed", "purpose": t["purpose"]})
     for tool, dim, argv, ext, cwd in plan:
         argv = [a.replace("{RAW}", str(raw)) for a in argv]
         t0 = time.time()
@@ -167,14 +179,23 @@ def main():
                                timeout=args.timeout)
             dest = raw / f"{tool}.{ext or 'json'}"
             if ext is not None:  # tool writes to stdout
-                dest.write_text(r.stdout if r.stdout.strip() else r.stderr)
+                dest.write_text(r.stdout)
+            produced = dest.exists() and dest.stat().st_size > 0
+            # many linters exit non-zero when they find something; only an exit
+            # with no output means the scan itself failed
+            if r.returncode != 0 and not produced:
+                manifest["skipped"].append({
+                    "tool": tool, "dimension": dim,
+                    "reason": f"exit {r.returncode}: {(r.stderr or '').strip()[-200:] or 'no output'}"})
+                continue
             manifest["ran"].append({"tool": tool, "dimension": dim, "rc": r.returncode,
                                     "seconds": round(time.time() - t0, 1),
-                                    "argv": argv})
+                                    "argv": argv, "empty": not produced})
         except subprocess.TimeoutExpired:
-            manifest["skipped"].append({"tool": tool, "reason": f"timeout {args.timeout}s"})
+            manifest["skipped"].append({"tool": tool, "dimension": dim,
+                                        "reason": f"timeout {args.timeout}s"})
         except Exception as e:
-            manifest["skipped"].append({"tool": tool, "reason": f"error: {e}"})
+            manifest["skipped"].append({"tool": tool, "dimension": dim, "reason": f"error: {e}"})
     (raw / "_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"ran {len(manifest['ran'])}, skipped {len(manifest['skipped'])}; "
           f"manifest at {raw/'_manifest.json'}")

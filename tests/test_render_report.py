@@ -19,6 +19,11 @@ def test_md_html_headings_and_tables():
     assert "<ul>\n<li>item</li>\n</ul>" in out
 
 
+def test_render_md_tolerates_partial_metrics(sample_findings, sample_narrative):
+    md = render_report.render_md(sample_findings, {"hotspots": []}, sample_narrative, {}, {}, {})
+    assert "Source LOC: 0" in md
+
+
 def test_rollup_writes_html(tmp_path, sample_findings, sample_narrative, monkeypatch):
     root = tmp_path / "audit"
     for name in ("api", "web"):

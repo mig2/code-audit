@@ -9,6 +9,7 @@ import json
 import re
 import sys
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -507,7 +508,8 @@ def main():
     out = Path(args.out)
     doc = load_findings(out / "findings.json")
     doc["audit"] = {"repo": repo, "commit": profile.get("commit"),
-                    "scope": profile.get("scope", ".")}
+                    "scope": profile.get("scope", "."),
+                    "date": datetime.now(timezone.utc).isoformat(timespec="seconds")}
     doc["findings"].extend(all_findings)
     save_findings(doc, out / "findings.json")
     final = json.loads((out / "findings.json").read_text())["findings"]

@@ -222,9 +222,9 @@ def render_md(fdoc, metrics, nar, tools, profile, manifest):
 
     A("## Metrics appendix\n")
     if metrics:
-        A(f"- Source LOC: {metrics.get('source_loc'):,} · test LOC: "
-          f"{metrics.get('test_loc'):,} · ratio {metrics.get('test_to_source_ratio')}")
-        A(f"- Files: {metrics.get('file_count'):,} · TODO/FIXME: {metrics.get('todo_fixme_count')}")
+        A(f"- Source LOC: {metrics.get('source_loc') or 0:,} · test LOC: "
+          f"{metrics.get('test_loc') or 0:,} · ratio {metrics.get('test_to_source_ratio')}")
+        A(f"- Files: {metrics.get('file_count') or 0:,} · TODO/FIXME: {metrics.get('todo_fixme_count')}")
         if metrics.get("hotspots"):
             A("- Top hotspots (complexity×churn): " + ", ".join(
                 f"`{h['path']}`" for h in metrics["hotspots"][:8]))

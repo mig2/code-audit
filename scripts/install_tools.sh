@@ -25,12 +25,19 @@ py_install() {  # prefer pipx > uv > pip --user
 }
 
 gh_release_binary() {  # $1 name, $2 repo, $3 asset-grep
-  local name="$1" repo="$2" pat="$3" os arch url tmp
+  local name="$1" repo="$2" pat="$3" os arch arch_alt url tmp
+  have curl || { echo "SKIP $name: curl not found"; return 1; }
   os=$(uname -s | tr '[:upper:]' '[:lower:]'); arch=$(uname -m)
-  [[ "$arch" == "x86_64" ]] && arch_alt="amd64" || arch_alt="$arch"
+  case "$arch" in
+    x86_64)  arch_alt="amd64";;
+    aarch64) arch_alt="arm64";;
+    arm64)   arch_alt="aarch64";;
+    *)       arch_alt="$arch";;
+  esac
   url=$(curl -fsSL "https://api.github.com/repos/$repo/releases/latest" \
         | grep -o '"browser_download_url": *"[^"]*"' | cut -d'"' -f4 \
-        | grep -i "$os" | grep -iE "($arch|$arch_alt)" | grep -iE "$pat" | head -1)
+        | grep -i "$os" | grep -iE "($arch|$arch_alt)" | grep -iE "$pat" \
+        | grep -viE '\.(sig|asc|pem|sha256|sha256sum|sbom|json|txt)$|checksums' | head -1)
   [[ -z "$url" ]] && { echo "SKIP $name: no matching release asset"; return 1; }
   tmp=$(mktemp -d)
   echo "+ download $url"
