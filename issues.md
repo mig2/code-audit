@@ -135,19 +135,35 @@
 - **Commit:** bf61a63
 - **Closed:** 2026-09-10
 
-## Open
-
 ### #17 — Scanner outputs written but never parsed; tools probed but never run
 - **Labels:** enhancement, tooling
 - **Description:** radon, cargo-deny, pmd output is written but has no parser. jscpd, vulture, knip, golangci-lint, clang-tidy, spotbugs, license tools and others are probed by `check_tools.py` but never run. Registry does not match the lang references.
+- **Resolution:** Parsers for radon-cc, cargo-deny, pmd. jscpd, vulture, knip, golangci-lint, clang-tidy (with compile DB), license inventories, ruff format, radon mi, swift-format now run and normalize. Build-dependent tools marked manual in the registry; lang references match `run_scanners` argv. A test asserts every parser has a producer.
+- **Commit:** 19736a5
+- **Closed:** 2026-09-10
 
 ### #18 — `metrics.py` does not produce the inputs the dimension rubrics assume
 - **Labels:** enhancement
 - **Description:** No function-size distribution, regex-count "complexity", no duplication or license inventory, no coverage-by-area, cycle detection only for TS. Dead TODO loop and a redundant second file walk.
+- **Resolution:** `metrics.json` gains `functions`, `complexity_source` (radon for Python), `duplication`, `licenses`, `coverage.by_area`, `import_cycles` (Python). Dead loop removed; single file walk. Report appendix and `dimensions.md` updated.
+- **Commit:** 255bc39
+- **Closed:** 2026-09-10
 
 ### #21 — Add tests for `normalize_findings` parsers, `metrics`, `render_report`, `detect_repo`
 - **Labels:** enhancement, tooling
 - **Description:** All 20 tests cover multi-audit plumbing; the 18 parsers, metrics, report rendering, repo detection, fingerprint id stability and compare/file-issues planning have none. Add fixture-based tests and a dev requirements file.
+- **Resolution:** Fixtures for all 18 original parsers with mapping assertions; cap_floods, end-to-end normalize, detect_repo, file_issues dry-run tests; `requirements-dev.txt`. Suite grew from 20 to 115 tests across #12–#23.
+- **Commit:** a40fc41
+- **Closed:** 2026-09-10
+
+### #23 — normalize_findings: govulncheck parser reads line-by-line so real output yields nothing; main() does not create --out
+- **Labels:** bug
+- **Description:** Real `govulncheck -json` output is pretty-printed multi-line JSON, so the line-oriented parser produced zero findings. `main()` failed with `FileNotFoundError` when `AUDIT_DIR` did not exist.
+- **Resolution:** `iter_json_objects()` reads compact or pretty-printed streams; fixture converted to the real shape. `main()` creates the output directory.
+- **Commit:** b95e7d8
+- **Closed:** 2026-09-10
+
+## Open
 
 ### #22 — Restructure into a `code` plugin bundle: `skills/audit` and `skills/calibration`
 - **Labels:** enhancement, setup
