@@ -2,7 +2,11 @@
 """Phase 2a: run available scanners; capture raw output to AUDIT_DIR/raw/.
 
 Usage: run_scanners.py --profile P.json --tools T.json --out AUDIT_DIR
-       [--offline] [--only security,...] [--project NAME] [--timeout 600]
+       [--offline] [--only security,...] [--timeout 600]
+
+Scanners run inside the profile's `scope` (set by `detect_repo.py --path`), so a
+sub-directory audit scans only that sub-directory. gitleaks is the exception: it
+walks git history for the whole repository regardless of scope.
 
 Read-only with respect to the repo (no test runs, no builds). Test/coverage/sanitizer
 runs are deliberately excluded here — Claude requests those separately with user
@@ -20,7 +24,7 @@ NETWORK_TOOLS = {"pip-audit", "osv-scanner", "cargo-audit", "npm-audit", "govuln
 
 
 def cmds_for(profile, tools, only, offline):
-    repo = Path(profile["repo"])
+    repo = (Path(profile["repo"]) / profile.get("scope", ".")).resolve()
     langs = {l["language"] for l in profile["languages"]}
     avail = {k for k, v in tools["tools"].items() if v["available"]}
     have_npx = shutil.which("npx") is not None

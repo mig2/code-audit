@@ -3,7 +3,7 @@
 
 Usage: compare_audits.py DIR1 DIR2 [...] --out OUTDIR
 Auto-detects same-repo trend mode (shared remote) vs cross-repo comparison.
-Writes comparison.md (+ comparison.html if narrative present).
+Writes comparison.md and comparison.html.
 """
 import argparse
 import json
@@ -14,6 +14,43 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent))
 from fingerprint import SEVERITIES, DIMENSIONS, severity_counts  # noqa: E402
+from render_report import md_html, wrap_html  # noqa: E402
+
+GRADE_RANK = {g: i for i, g in enumerate(
+    ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"])}
+
+
+def grade_for(audit, dim):
+    for r in audit["narrative"].get("scorecard", []):
+        if r["dimension"] == dim and r.get("assessed", True):
+            return str(r.get("grade", "")).strip().upper() or None
+    return None
+
+
+def outliers(audits):
+    """Per dimension: best and worst audit by grade, then by open-finding density."""
+    rows = []
+    for dim in DIMENSIONS:
+        ranked = []
+        for a in audits:
+            g = grade_for(a, dim)
+            dens = sum(1 for f in a["open"] if f["dimension"] == dim) / a["kloc"]
+            if g is None and dens == 0:
+                continue
+            ranked.append((GRADE_RANK.get(g, len(GRADE_RANK)), dens, a["name"], g))
+        if len(ranked) < 2:
+            continue
+        ranked.sort()
+        best, worst = ranked[0], ranked[-1]
+        if best[:2] == worst[:2]:
+            continue
+        rows.append((dim, best, worst))
+    return rows
+
+
+def fmt_outlier(x):
+    _, dens, name, g = x
+    return f"**{name}** ({g or 'n/a'}, {dens:.2f}/kLOC)"
 
 
 def load_dir(d):
@@ -98,6 +135,16 @@ def main():
             A(f"| {dim} | " + " | ".join(vals) + " |")
     A("")
 
+    # outliers
+    outs = outliers(audits)
+    if outs and not trend:
+        A("## Outliers (by grade, then open-finding density)\n")
+        A("| Dimension | Best | Worst |")
+        A("|---|---|---|")
+        for dim, best, worst in outs:
+            A(f"| {dim} | {fmt_outlier(best)} | {fmt_outlier(worst)} |")
+        A("")
+
     # common weaknesses
     rule_repos = defaultdict(dict)
     for a in audits:
@@ -153,8 +200,11 @@ def main():
     if nar.get("recommendations"):
         A("## Recommendations\n" + nar["recommendations"] + "\n")
 
-    (outdir / "comparison.md").write_text("\n".join(L) + "\n")
-    print(f"wrote {outdir/'comparison.md'}"
+    md = "\n".join(L) + "\n"
+    (outdir / "comparison.md").write_text(md)
+    heading = "Audit trend" if trend else "Audit comparison"
+    (outdir / "comparison.html").write_text(wrap_html(L[0].lstrip("# ").strip(), heading, md_html(md)))
+    print(f"wrote {outdir/'comparison.md'} and {outdir/'comparison.html'}"
           + (" (trend mode)" if trend else f" ({len(audits)} repos)"))
 
 

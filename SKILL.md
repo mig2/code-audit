@@ -72,8 +72,10 @@ recent completed audit. Use the returned path as `AUDIT_DIR` for all subsequent 
 frameworks, build systems, VCS host, sub-projects, service-vs-library classification.
 Review it. If sub-projects were detected (monorepo), the audit is **per-project**: each
 sub-project gets its own `AUDIT_DIR/<project>/` with its own findings, baseline, and
-report, plus a repo-level rollup. Run subsequent phases once per project (scripts accept
-`--project NAME` to scope), then build the rollup in Phase 5.
+report, plus a repo-level rollup. Run Phases 0–5 once per project: pass
+`--path <project>` to `detect_repo.py` and `metrics.py` and `--out AUDIT_DIR/<project>`
+to every script; `run_scanners.py` and `normalize_findings.py` follow the `scope`
+recorded in that project's `repo-profile.json`. Then build the rollup in Phase 5.
 
 Now read `references/lang/<x>.md` for each detected language (C and C++ share
 `c-cpp.md`; TS/JS/Node share `typescript.md`).

@@ -3,7 +3,8 @@
 
 Usage: render_report.py AUDIT_DIR [--rollup]
 --rollup: AUDIT_DIR contains per-project subdirs (each already rendered);
-          builds rollup report from their scorecards + rollup-narrative.json.
+          builds rollup report.md + report.html from their scorecards +
+          rollup-narrative.json.
 """
 import argparse
 import html
@@ -21,11 +22,11 @@ SEV_COLOR = {"P0": "var(--p0)", "P1": "var(--p1)", "P2": "var(--p2)",
 TEMPLATE = Path(__file__).parent.parent / "assets" / "report-template.html"
 
 
-# ── minimal markdown -> html (paragraphs, lists, bold/italic/code, links) ────
+# ── minimal markdown -> html (headings, tables, lists, code, inline marks) ──
 def md_html(text):
     if not text:
         return ""
-    out, lines, in_list, in_code = [], text.splitlines(), False, False
+    out, lines, in_list, in_code, in_table = [], text.splitlines(), False, False, False
     para = []
 
     def flush():
@@ -33,6 +34,16 @@ def md_html(text):
         if para:
             out.append("<p>" + inline(" ".join(para)) + "</p>")
             para = []
+
+    def close_blocks():
+        nonlocal in_list, in_table
+        flush()
+        if in_list:
+            out.append("</ul>")
+            in_list = False
+        if in_table:
+            out.append("</tbody></table>")
+            in_table = False
 
     def inline(s):
         s = html.escape(s, quote=False)
@@ -47,13 +58,36 @@ def md_html(text):
             if in_code:
                 out.append("</pre>")
             else:
-                flush()
+                close_blocks()
                 out.append("<pre>")
             in_code = not in_code
             continue
         if in_code:
             out.append(html.escape(ln))
             continue
+        m = re.match(r"^(#{1,6})\s+(.*)", ln)
+        if m:
+            close_blocks()
+            out.append(f"<h{len(m.group(1))}>{inline(m.group(2))}</h{len(m.group(1))}>")
+            continue
+        if ln.strip().startswith("|"):
+            cells = [c.strip() for c in ln.strip().strip("|").split("|")]
+            if all(re.fullmatch(r":?-+:?", c) for c in cells if c):
+                continue
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            flush()
+            if not in_table:
+                out.append("<table><thead><tr>" + "".join(f"<th>{inline(c)}</th>" for c in cells)
+                           + "</tr></thead><tbody>")
+                in_table = True
+            else:
+                out.append("<tr>" + "".join(f"<td>{inline(c)}</td>" for c in cells) + "</tr>")
+            continue
+        if in_table:
+            out.append("</tbody></table>")
+            in_table = False
         m = re.match(r"^\s*[-*]\s+(.*)", ln)
         if m:
             flush()
@@ -69,12 +103,20 @@ def md_html(text):
             flush()
         else:
             para.append(ln.strip())
-    flush()
-    if in_list:
-        out.append("</ul>")
+    close_blocks()
     if in_code:
         out.append("</pre>")
     return "\n".join(out)
+
+
+def wrap_html(title, heading, body_html, plate="", sevstrip="", legend=""):
+    return (TEMPLATE.read_text().replace("{{TITLE}}", esc(title))
+            .replace("{{REPO_NAME}}", esc(heading))
+            .replace("{{PLATE}}", plate)
+            .replace("{{SEVSTRIP}}", sevstrip)
+            .replace("{{LEGEND}}", legend)
+            .replace("{{BODY}}", body_html)
+            .replace("{{DATE}}", date.today().isoformat()))
 
 
 def esc(s):
@@ -385,15 +427,8 @@ def render_html(fdoc, metrics, nar, tools, profile, manifest):
                            for f in suppressed) + "</ul></details>")
         section("Suppressed", "§9", inner)
 
-    tpl = TEMPLATE.read_text()
     title = nar.get("title") or f"Audit — {repo_name}"
-    return (tpl.replace("{{TITLE}}", esc(title))
-               .replace("{{REPO_NAME}}", esc(repo_name))
-               .replace("{{PLATE}}", plate)
-               .replace("{{SEVSTRIP}}", sevstrip)
-               .replace("{{LEGEND}}", legend)
-               .replace("{{BODY}}", "\n".join(B))
-               .replace("{{DATE}}", date.today().isoformat()))
+    return wrap_html(title, repo_name, "\n".join(B), plate, sevstrip, legend)
 
 
 # ─────────────────────────────── rollup mode ────────────────────────────────
@@ -422,8 +457,11 @@ def render_rollup(audit_dir):
     if nar.get("comparison_notes"):
         L.append("\n## Notes\n" + nar["comparison_notes"])
     L.append("\nPer-project reports: " + ", ".join(f"`{n}/report.md`" for n, _, _ in projects))
-    (d / "report.md").write_text("\n".join(L) + "\n")
-    print(f"wrote {d/'report.md'} (rollup over {len(projects)} projects)")
+    md = "\n".join(L) + "\n"
+    (d / "report.md").write_text(md)
+    title = f"Audit rollup — {d.resolve().name}"
+    (d / "report.html").write_text(wrap_html(title, d.resolve().name, md_html(md)))
+    print(f"wrote {d/'report.md'} and {d/'report.html'} (rollup over {len(projects)} projects)")
 
 
 def main():
