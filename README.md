@@ -82,3 +82,30 @@ Compare audits across repos or track the same repo over time:
 ```
 
 See `skills/audit/references/portfolio.md` for details.
+
+# /code:calibration
+
+Judges proportionality and ownership rather than defects. Reads an existing audit run
+(`metrics.json`, `repo-profile.json`, `findings.json`) plus a deterministic signals pass,
+then Claude reads a deliberate sample of the code and writes `calibration.json`, rendered
+to `calibration.md` / `calibration.html` in the same `.audit/<run>/` directory.
+
+```
+/code:calibration [--audit AUDIT_DIR] [--path SUBDIR] [--out DIR]
+```
+
+Output:
+
+- **Proportionality by area** — abstraction, configurability, error handling, testing,
+  tooling/CI, dependencies, documentation, operability: *over-built / fitted / under-built*,
+  each with cited evidence, relative to the repo's confirmed purpose.
+- **Required owner level** — the least experienced person who could safely change the
+  system, on a five-rung ladder (L0 "AI-assisted, not a software engineer" → L4 staff),
+  crosswalked to Dreyfus, SFIA and common industry ladders.
+- **Evident author level** — what the code's signatures reveal about how it was built,
+  stated as a range with confidence; describes the artifact, never the person.
+- **Gap plan** — where required and evident diverge, the risks that creates, and three to
+  six steps ordered by risk reduction per effort.
+
+Needs a completed `/code:audit` run (any tier); it will offer to run `triage` if none exists.
+References: `skills/calibration/references/{ladder,signals,report}.md`.
