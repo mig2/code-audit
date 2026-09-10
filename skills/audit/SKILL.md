@@ -1,5 +1,5 @@
 ---
-name: code-audit
+name: audit
 description: >-
   Perform a structured, full-repository code audit across design, structure, data flow,
   security, testing, maintainability, readability, correctness, performance,
@@ -8,18 +8,22 @@ description: >-
   review, assess a project before adopting or refactoring it, generate an audit report or
   scorecard, compare audits across repos, or turn audit findings into GitHub/GitLab issues.
   Trigger on phrases like "audit", "code review of the whole repo", "health check",
-  "tech debt report", "how good is this codebase", or "/code-audit". Works for Python,
+  "tech debt report", "how good is this codebase", or "/code:audit". Works for Python,
   TypeScript/JavaScript/Node, Swift, Go, C, C++, Java, and Rust, including mixed-language
   monorepos.
 ---
 
-# code-audit
+# code:audit
 
 Audit a repository at a chosen depth tier, producing a canonical `findings.json` from
 which all assets (markdown report, polished HTML report, interactive dashboard, tracker
 issues) are generated. Deterministic work is done by scripts in `scripts/`; your context
 budget is reserved for what only you can do: architecture review, data-flow tracing,
 correctness reasoning, and synthesis.
+
+All `scripts/`, `references/`, and `assets/` paths in this file are relative to this
+skill's own directory (`skills/audit/` inside the `code` plugin) — resolve them from
+where this SKILL.md lives, not from the audited repo.
 
 **Read before starting:** `references/dimensions.md` (the rubrics) and the
 `references/lang/<x>.md` file for each detected language. Read
@@ -29,10 +33,10 @@ when their phase arrives (noted below).
 ## Invocation
 
 ```
-/code-audit [triage|standard|deep] [--only dim1,dim2] [--path SUBDIR] [--out DIR]
+/code:audit [triage|standard|deep] [--only dim1,dim2] [--path SUBDIR] [--out DIR]
             [--no-install] [--offline] [--file-issues] [--baseline FILE]
-/code-audit compare <auditdir1> <auditdir2> [...]
-/code-audit migrate                   # move flat .audit/ to timestamped layout
+/code:audit compare <auditdir1> <auditdir2> [...]
+/code:audit migrate                   # move flat .audit/ to timestamped layout
 ```
 
 Default tier: `standard`. Default workspace: `.audit/` in the repo root (ensure it is

@@ -1,16 +1,39 @@
-# code-audit
+# code — codebase assessment plugin for Claude Code
 
-A structured, full-repository code audit skill for Claude Code. Audits across 11 dimensions — design, structure, data flow, security, testing, maintainability, readability, correctness, performance, dependencies/licensing, and operability — producing findings, reports, and interactive dashboards.
+Two skills under one namespace:
+
+- **`/code:audit`** — a structured, full-repository audit across 11 dimensions (design, structure, data flow, security, testing, maintainability, readability, correctness, performance, dependencies/licensing, operability), producing findings, reports, an interactive dashboard, and optional tracker issues.
+- **`/code:calibration`** — a proportionality and ownership assessment: is the codebase over- or under-engineered for its problem, what level of engineer should own it, what level of engineer evidently built it, and where the gaps are.
 
 Supports Python, TypeScript/JavaScript/Node, Swift, Go, C/C++, Java, and Rust, including mixed-language monorepos.
+
+## Install
+
+```
+git clone https://github.com/mig2/code-audit ~/Code/code-audit
+~/Code/code-audit/install.sh        # symlinks ~/.claude/skills/code -> the clone
+```
+
+Claude Code loads any plugin directory under `~/.claude/skills/` automatically. Because the install is a symlink, `git pull` is the update. The script also removes the pre-plugin copy at `~/.claude/skills/code-audit/` if present.
+
+## Layout
+
+```
+.claude-plugin/plugin.json      # plugin manifest (name: code)
+skills/audit/                   # /code:audit — SKILL.md, scripts/, references/, assets/
+skills/calibration/             # /code:calibration
+tests/                          # pytest suite for the audit scripts (pip install -r requirements-dev.txt)
+```
+
+# /code:audit
 
 ## Usage
 
 ```
-/code-audit [triage|standard|deep] [--only dim1,dim2] [--path SUBDIR] [--out DIR]
+/code:audit [triage|standard|deep] [--only dim1,dim2] [--path SUBDIR] [--out DIR]
             [--no-install] [--offline] [--file-issues] [--baseline FILE]
-/code-audit compare <auditdir1> <auditdir2> [...]
-/code-audit migrate                   # move a flat .audit/ to the timestamped layout
+/code:audit compare <auditdir1> <auditdir2> [...]
+/code:audit migrate                   # move a flat .audit/ to the timestamped layout
 ```
 
 ## Pipeline
@@ -55,7 +78,7 @@ automatically.
 Compare audits across repos or track the same repo over time:
 
 ```
-/code-audit compare .audit-v1 .audit-v2
+/code:audit compare .audit-v1 .audit-v2
 ```
 
-See `references/portfolio.md` for details.
+See `skills/audit/references/portfolio.md` for details.

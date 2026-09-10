@@ -2,7 +2,7 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "skills" / "audit" / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import audit_history
 
@@ -124,7 +124,7 @@ import subprocess
 def test_cli_init(tmp_audit):
     repo = tmp_audit.parent
     result = subprocess.run(
-        ["python3", "scripts/audit_history.py", "init", str(repo), "--out", str(tmp_audit)],
+        ["python3", "skills/audit/scripts/audit_history.py", "init", str(repo), "--out", str(tmp_audit)],
         capture_output=True, text=True, cwd=Path(__file__).resolve().parent.parent
     )
     assert result.returncode == 0
@@ -135,7 +135,7 @@ def test_cli_init(tmp_audit):
 def test_cli_previous_no_prior(tmp_audit):
     audit_dir = audit_history.init_audit(tmp_audit, repo="r", remote="")
     result = subprocess.run(
-        ["python3", "scripts/audit_history.py", "previous", str(audit_dir)],
+        ["python3", "skills/audit/scripts/audit_history.py", "previous", str(audit_dir)],
         capture_output=True, text=True, cwd=Path(__file__).resolve().parent.parent
     )
     assert result.returncode == 0

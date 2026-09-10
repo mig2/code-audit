@@ -1,6 +1,6 @@
 # Portfolio mode — comparing audits
 
-`/code-audit compare <dir1> <dir2> [...]` operates on **completed audit workspaces**
+`/code:audit compare <dir1> <dir2> [...]` operates on **completed audit workspaces**
 (each containing `findings.json`, `metrics.json`, `narrative.json`, `repo-profile.json`).
 No re-scanning.
 

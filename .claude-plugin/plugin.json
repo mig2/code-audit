@@ -1,0 +1,8 @@
+{
+  "name": "code",
+  "description": "Codebase assessment skills: /code:audit (structured full-repo audit with findings, reports, dashboard, tracker issues) and /code:calibration (proportionality and owner-expertise assessment).",
+  "version": "0.2.0",
+  "author": {
+    "name": "mig2"
+  }
+}
