@@ -340,19 +340,80 @@ def parse_gitleaks(data, repo):
             snippet_key=d.get("Fingerprint", d.get("RuleID", "")))
 
 
+_CVSS3_AV = {"N": 0.85, "A": 0.62, "L": 0.55, "P": 0.2}
+_CVSS3_AC = {"L": 0.77, "H": 0.44}
+_CVSS3_PR_U = {"N": 0.85, "L": 0.62, "H": 0.27}
+_CVSS3_PR_C = {"N": 0.85, "L": 0.68, "H": 0.5}
+_CVSS3_UI = {"N": 0.85, "R": 0.62}
+_CVSS3_CIA = {"H": 0.56, "L": 0.22, "N": 0.0}
+
+
+def _cvss3_roundup(x):
+    i = round(x * 100000)
+    if i % 10000 == 0:
+        return i / 100000.0
+    return (i // 10000 + 1) / 10.0
+
+
+def cvss3_base_score(vector):
+    """Base score from a CVSS:3.0/3.1 vector string; None if unparseable."""
+    try:
+        parts = dict(p.split(":", 1) for p in vector.split("/")[1:])
+        changed = parts["S"] == "C"
+        pr = (_CVSS3_PR_C if changed else _CVSS3_PR_U)[parts["PR"]]
+        iss = 1 - ((1 - _CVSS3_CIA[parts["C"]]) * (1 - _CVSS3_CIA[parts["I"]])
+                   * (1 - _CVSS3_CIA[parts["A"]]))
+        impact = (7.52 * (iss - 0.029) - 3.25 * (iss - 0.02) ** 15 if changed
+                  else 6.42 * iss)
+        exploit = 8.22 * _CVSS3_AV[parts["AV"]] * _CVSS3_AC[parts["AC"]] * pr * _CVSS3_UI[parts["UI"]]
+    except (KeyError, ValueError, AttributeError):
+        return None
+    if impact <= 0:
+        return 0.0
+    total = 1.08 * (impact + exploit) if changed else impact + exploit
+    return _cvss3_roundup(min(total, 10))
+
+
+_OSV_LABEL_SCORE = {"CRITICAL": 9.5, "HIGH": 8.0, "MODERATE": 5.0, "MEDIUM": 5.0, "LOW": 2.0}
+
+
+def osv_severity(vuln):
+    """P0..P3 from an OSV vulnerability record; P1 when severity is unknown.
+
+    Per severity-and-triage.md: CVSS >= 9 -> P0 (if reachable; reachability is
+    a Phase 3 judgment), 7-9 -> P1, 4-7 -> P2, below -> P3. Unknown keeps the
+    higher default so it isn't silently deprioritized.
+    """
+    score = None
+    for s in vuln.get("severity", []) or []:
+        raw = str(s.get("score", ""))
+        if s.get("type") == "CVSS_V3":
+            score = cvss3_base_score(raw)
+        elif raw.replace(".", "", 1).isdigit():
+            score = float(raw)
+        if score is not None:
+            break
+    if score is None:
+        label = str((vuln.get("database_specific") or {}).get("severity", "")).upper()
+        score = _OSV_LABEL_SCORE.get(label)
+    if score is None:
+        return "P1"
+    if score >= 9:
+        return "P0"
+    if score >= 7:
+        return "P1"
+    if score >= 4:
+        return "P2"
+    return "P3"
+
+
 def parse_osv(data, repo):
     for res in data.get("results", []) or []:
         src = (res.get("source", {}) or {}).get("path", "")
         for pkg in res.get("packages", []) or []:
             name = (pkg.get("package", {}) or {}).get("name", "?")
             for v in pkg.get("vulnerabilities", []) or []:
-                sev = "P1"
-                for s in v.get("severity", []) or []:
-                    try:
-                        if s.get("type") == "CVSS_V3" and float(str(s.get("score","0")).split("/")[0] if "/" not in str(s.get("score")) else 0) >= 9:
-                            sev = "P0"
-                    except (ValueError, TypeError):
-                        pass
+                sev = osv_severity(v)
                 yield new_finding(
                     dimension="security", rule=f"osv.{v.get('id','OSV')}",
                     source="osv-scanner", severity=sev, confidence="high", effort="S",
