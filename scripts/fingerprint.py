@@ -107,14 +107,20 @@ def save_findings(doc: dict, path: Path) -> None:
         else:
             seen[fp] = f
             ordered.append(f)
+    # Ids are display handles cited by reports and tracker issues; once assigned
+    # they never move. New findings get the next number above every existing id.
+    max_n = 0
+    for f in ordered:
+        m = re.fullmatch(r"CA-\d{4}-(\d+)", f.get("id") or "")
+        if m:
+            max_n = max(max_n, int(m.group(1)))
     year = date.today().year
-    for i, f in enumerate(ordered, 1):
-        f["id"] = f.get("id") or f"CA-{year}-{i:04d}"
-    # renumber gaps deterministically by sort order
+    for f in ordered:
+        if not f.get("id"):
+            max_n += 1
+            f["id"] = f"CA-{year}-{max_n:04d}"
     ordered.sort(key=lambda f: (SEV_ORDER.get(f["severity"], 9),
                                 f["dimension"], f["rule"], f["fingerprint"]))
-    for i, f in enumerate(ordered, 1):
-        f["id"] = f"CA-{year}-{i:04d}"
     doc["findings"] = ordered
     Path(path).write_text(json.dumps(doc, indent=2) + "\n")
 
