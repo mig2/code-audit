@@ -132,6 +132,43 @@ def open_findings(findings):
     return [f for f in findings if f["status"] in ("new", "persisting")]
 
 
+def metrics_extras(m):
+    """One markdown line per optional metrics block that is present."""
+    out = []
+    fn = m.get("functions") or {}
+    if fn.get("count"):
+        over = fn.get("over_80") or []
+        s = (f"Functions: {fn['count']:,} · p50 {fn.get('p50')} / p90 {fn.get('p90')} / "
+             f"max {fn.get('max')} LOC · >80 LOC: {len(over)}")
+        if over:
+            s += " (" + ", ".join(f"`{o['path']}:{o['name']}` {o['loc']}" for o in over[:5]) + ")"
+        out.append(s + " — heuristic")
+    dup = m.get("duplication")
+    if dup and dup.get("percentage") is not None:
+        out.append(f"Duplication: {dup['percentage']}% ({dup.get('clones', 0)} clones)")
+    cov = m.get("coverage")
+    if cov and cov.get("overall") is not None:
+        worst = sorted(((v.get("pct") or 0, k) for k, v in (cov.get("by_area") or {}).items()
+                        if v.get("lines")), key=lambda x: x[0])[:4]
+        s = f"Coverage ({cov.get('source')}): {cov['overall']}% overall"
+        if worst:
+            s += "; lowest areas: " + ", ".join(f"`{k}` {p}%" for p, k in worst)
+        out.append(s)
+    lic = m.get("licenses")
+    if lic and lic.get("packages"):
+        s = f"Licenses: {lic['packages']} packages"
+        if lic.get("copyleft"):
+            s += f" · copyleft: {len(lic['copyleft'])}"
+        if lic.get("unknown"):
+            s += f" · unknown: {len(lic['unknown'])}"
+        out.append(s)
+    cyc = m.get("import_cycles") or {}
+    n_cyc = sum(len(v) for k, v in cyc.items() if isinstance(v, list))
+    if n_cyc:
+        out.append(f"Import cycles: {n_cyc}")
+    return out
+
+
 def load(audit_dir):
     d = Path(audit_dir)
     findings = json.loads((d / "findings.json").read_text())
@@ -225,6 +262,8 @@ def render_md(fdoc, metrics, nar, tools, profile, manifest):
         A(f"- Source LOC: {metrics.get('source_loc') or 0:,} · test LOC: "
           f"{metrics.get('test_loc') or 0:,} · ratio {metrics.get('test_to_source_ratio')}")
         A(f"- Files: {metrics.get('file_count') or 0:,} · TODO/FIXME: {metrics.get('todo_fixme_count')}")
+        for line in metrics_extras(metrics):
+            A(f"- {line}")
         if metrics.get("hotspots"):
             A("- Top hotspots (complexity×churn): " + ", ".join(
                 f"`{h['path']}`" for h in metrics["hotspots"][:8]))
@@ -386,6 +425,9 @@ def render_html(fdoc, metrics, nar, tools, profile, manifest):
                      ("Files", f"{m.get('file_count',0):,}"),
                      ("TODO/FIXME", m.get("todo_fixme_count"))]:
             rows += f"<tr><td><b>{k}</b></td><td>{esc(v)}</td></tr>"
+        for line in metrics_extras(m):
+            k, _, v = line.partition(": ")
+            rows += f"<tr><td><b>{esc(k)}</b></td><td>{md_html(v).replace('<p>', '').replace('</p>', '')}</td></tr>"
         hs = "".join(f"<tr><td><code>{esc(h['path'])}</code></td><td>{h['loc']}</td>"
                      f"<td>{h['commits_12mo']}</td><td>{h['score']}</td></tr>"
                      for h in m.get("hotspots", [])[:10])

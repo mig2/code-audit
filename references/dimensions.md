@@ -16,7 +16,8 @@ evidence (file:line + snippet) and a recommendation.
 direction; components replaceable without cascading edits; no speculative generality;
 framework used the way it wants to be used.
 
-**Examine:** the dependency graph (Phase 2 emits import cycles and layering hints);
+**Examine:** the dependency graph (`metrics.json` → `import_cycles` for Python;
+`raw/madge.json` for TS/JS);
 public API surfaces — are they minimal and coherent?; the 3–5 central abstractions — do
 they pull their weight?; extension points actually used vs. YAGNI scaffolding; backward
 compatibility posture of public APIs (semver discipline, deprecation paths).
@@ -37,8 +38,8 @@ describe domain, not plumbing; file and function sizes have sane distributions; 
 code rotting in place.
 
 **Examine:** top-level layout vs. the project's own stated organization; outliers in the
-size distributions from `metrics.json` (files > ~800 LOC, functions > ~80 LOC are review
-candidates, not automatic findings); dead/unreachable code reports; test placement
+size distributions from `metrics.json` (`big_files` > ~800 LOC, `functions.over_80` —
+heuristic signature detection — are review candidates, not automatic findings); dead/unreachable code reports; test placement
 conventions; generated-code separation.
 
 **Failure modes:** mirror-image trees (`src/x` + `tests/x` drifting apart); circular
@@ -99,8 +100,9 @@ points) and verify the top abuse paths.
 implementation; tests fail when the code is wrong and pass when refactored; fast enough
 to run habitually; fixtures comprehensible.
 
-**Examine:** coverage numbers *by area* (a 70% average hiding 0% on payment logic is the
-real finding); read a sample of tests for the most critical module — do assertions check
+**Examine:** coverage numbers *by area* (`metrics.json` → `coverage.by_area` and
+`coverage.uncovered_areas`, when a coverage file exists in the repo; a 70% average hiding
+0% on payment logic is the real finding); read a sample of tests for the most critical module — do assertions check
 outcomes or mock-call counts?; edge/boundary cases (empty, max, unicode, concurrent);
 error-path coverage; flakiness markers (retries, sleeps, time/network dependence); test
 runtime and CI wiring.
@@ -121,7 +123,8 @@ concentrated where the domain is genuinely complex; docs answer "why"; build/CI 
 one-command reproducible; upgrades aren't terrifying.
 
 **Examine:** hotspots (complexity × churn from `metrics.json`) — these files are where
-maintenance dollars go; duplication report (is it incidental or structural?); README/doc
+maintenance dollars go; duplication report (`metrics.json` → `duplication.top`, from
+jscpd — is it incidental or structural?); README/doc
 adequacy: setup, architecture, "why" comments at the weird parts; ADRs or their absence;
 bus factor (git authorship concentration on critical files); CI health (build time,
 flakiness); dependency freshness; TODO/FIXME census age.
@@ -204,7 +207,8 @@ standard — reason through the 2–3 hottest paths. deep — all major paths, p
 licenses inventoried with no copyleft surprises against the project's own license;
 critical deps maintained and pinned with an upgrade cadence.
 
-**Examine:** license inventory output — flag GPL/AGPL/SSPL-family in
+**Examine:** license inventory (`metrics.json` → `licenses.copyleft` / `licenses.unknown`,
+merged from license-checker, pip-licenses, go-licenses) — flag GPL/AGPL/SSPL-family in
 permissive/proprietary projects, and unknown-license deps; freshness/abandonment (last
 release, archived repos, single-maintainer criticals); transitive weight (does a CLI
 really need 600 packages?); lockfile hygiene (present, committed, in sync with
