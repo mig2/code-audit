@@ -47,10 +47,23 @@ automatically. Do not hand-write the markdown.
       { "step": "Remove `AbstractRepository`; call `SqliteRepository` directly", "why": "One implementation; the layer costs reading time and buys nothing", "effort": "S" }
     ]
   },
+  "next_level": {                           // always include: the most useful section for the owner
+    "level": "L4",                         // the rung above evident_level
+    "differences": [                       // 3–6, each "what the next rung would have done here" with evidence
+      "Failure modes named before the incident: every hardening traces to a dated outage (#303, #444, #475); L4 writes timeout enforcement on the day the scheduler is introduced",
+      "…"
+    ],
+    "cheapest_step": "the one concrete step that moves the codebase furthest toward that rung per unit of effort"
+  },
   "strengths": ["markdown bullets — what is genuinely well done; be specific"],
   "caveats": "markdown — single author / short history / generated-heavy / sample size; anything that bounds confidence"
 }
 ```
+
+`next_level` answers the question every owner asks first — "what would have made it the next rung?" — so
+write it even when the levels match. Frame each difference as anticipating vs. reacting, what is
+*absent*, or onboardable-without-a-conversation (see `ladder.md` § Reading the rung above). It is
+about the code, not the person, like everything else here.
 
 Levels are the codes `L0`–`L4`; the renderer expands them to their labels. Effort uses
 the audit scale (S < half a day, M 1–3 days, L a week or more).
@@ -63,10 +76,11 @@ the audit scale (S < half a day, M 1–3 days, L a week or more).
 4. Proportionality by area — table, then one block per area with note + evidence
 5. Required owner level — level, drivers, note
 6. Evident author level — level/range, signatures, note
-7. Gap — direction, summary, risks, plan table
-8. Strengths
-9. Caveats
-10. Signals appendix (auto)
+7. What L<n+1> would look like — differences, cheapest step (when `next_level` is present)
+8. Gap — direction, summary, risks, plan table
+9. Strengths
+10. Caveats
+11. Signals appendix (auto)
 
 ## Tone rules
 

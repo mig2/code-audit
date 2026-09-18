@@ -64,6 +64,28 @@ def test_render_sections_and_labels(tmp_path, monkeypatch):
     assert "<table>" in html and "<h2>Gap</h2>" in html
 
 
+def test_next_level_section(tmp_path, monkeypatch):
+    cal = _cal(next_level={"level": "L1", "differences": ["Structure by domain, not by prompt",
+                                                          "Tests that fail when behaviour changes"],
+                           "cheapest_step": "Add parse tests"})
+    _write(tmp_path, cal)
+    monkeypatch.setattr(sys, "argv", ["render_calibration.py", str(tmp_path)])
+    rc.main()
+    md = (tmp_path / "calibration.md").read_text()
+    assert "## What L1 would look like" in md
+    assert "_Junior engineer_" in md
+    assert "1. Structure by domain, not by prompt" in md and "2. Tests that fail" in md
+    assert "**Cheapest step toward it:** Add parse tests" in md
+    assert md.index("## What L1 would look like") < md.index("## Gap")
+
+
+def test_next_level_invalid_level_exits(tmp_path, monkeypatch):
+    _write(tmp_path, _cal(next_level={"level": "L9", "differences": []}))
+    monkeypatch.setattr(sys, "argv", ["render_calibration.py", str(tmp_path)])
+    with pytest.raises(SystemExit):
+        rc.main()
+
+
 def test_renders_without_signals(tmp_path, monkeypatch):
     _write(tmp_path, _cal())
     monkeypatch.setattr(sys, "argv", ["render_calibration.py", str(tmp_path)])

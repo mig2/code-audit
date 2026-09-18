@@ -88,6 +88,9 @@ two per area verdict.
    are the highest-signal area.
 4. The gap: direction, what it means in practice, the top risks, and a plan ordered by
    risk reduction per effort (three to six steps; never a hygiene checklist).
+5. The rung above: three to six concrete differences between this code and what the next
+   level would have done here, and the single cheapest step toward it — `ladder.md`
+   "Reading the rung above". Write it even when required and evident match.
 
 ### Phase 4 — Write and render
 

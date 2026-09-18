@@ -45,6 +45,9 @@ def validate(cal):
     check(gap.get("direction"), DIRECTIONS, "gap.direction")
     for step in gap.get("plan", []):
         check(step.get("effort"), EFFORTS, "gap.plan[].effort")
+    nxt = cal.get("next_level")
+    if nxt:
+        check(nxt.get("level"), list(LEVELS), "next_level.level")
 
 
 def level_str(blk):
@@ -157,6 +160,15 @@ def render_md(cal, sig):
     A("")
     if evi.get("note"):
         A(evi["note"] + "\n")
+
+    nxt = cal.get("next_level")
+    if nxt:
+        A(f"## What {nxt['level']} would look like\n")
+        A(f"_{LEVELS.get(nxt['level'], '?')}_ — the differences, each the gap between what this code does and what the next rung would have done:\n")
+        L.extend(f"{i}. {d}" for i, d in enumerate(nxt.get("differences", []), 1))
+        A("")
+        if nxt.get("cheapest_step"):
+            A(f"**Cheapest step toward it:** {nxt['cheapest_step']}\n")
 
     A("## Gap\n")
     A(f"**Direction:** {gap.get('direction', '?')}\n")

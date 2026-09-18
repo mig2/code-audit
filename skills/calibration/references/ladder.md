@@ -61,6 +61,23 @@ which era the signatures come from (`history` block: authors, first-commit ratio
 
 ---
 
+## Reading the rung above
+
+The report's `next_level` section answers "what would have made it L(n+1)?" — the first thing
+an owner asks. Frame each difference with one of three lenses, and cite where the current
+code shows the lower rung:
+
+| From → To | The rung above tends to… |
+|---|---|
+| **L0 → L1** | Know *why* the tricky part works; structure by domain instead of by prompt; write tests that would fail if the behaviour changed; keep one way of doing each thing; own the dependencies it added. |
+| **L1 → L2** | Apply idioms consistently across modules; handle the error path, not just the happy path; make tests independent of order, time and network; name things the same way everywhere; stop copy-pasting families and extract once. |
+| **L2 → L3** | Build only the abstraction the domain needs (no interface with one implementation "for later"); write the trade-off down where it was made; consider operability as a design input; aim tests at the bug-shaped code; know what *not* to build. |
+| **L3 → L4** | *Anticipate rather than react*: name the failure modes on the day the component is introduced, not after the incident. Isolate the parts that change from the parts that don't so growth stays safe by construction. Ship capability and its gate in the same change. Leave fewer moving parts doing the same job. Leave a map a new senior can onboard from without a conversation. |
+
+Always end with the cheapest single step toward the next rung — one, not a list.
+
+---
+
 ## Mapping signals to levels — reminders
 
 - **AI co-authorship is evidence, not a verdict.** Seniors use AI assistants heavily; a
