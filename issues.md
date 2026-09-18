@@ -184,6 +184,20 @@
 - **Commit:** ddb2c0e
 - **Closed:** 2026-09-10
 
+### #26 — calibration_signals: TS data-shape interfaces inflate the indirection census; error_boundary regex false-positives
+- **Labels:** enhancement
+- **Description:** Found on the first real calibration run (nudge, 2026-09-13): `interface X {}` data shapes counted as abstractions (143 "interfaces" for three behavioral ports); a commented-out `process.on('unhandledRejection')` counted as an error boundary.
+- **Resolution:** TS/JS interfaces count only with a method signature, `abstract`, or an `implements` reference; data shapes reported as `type_shapes`. Boundary detection strips comments/strings first and matches Node hooks on their call form. Tests added.
+- **Commit:** a081bfd
+- **Closed:** 2026-09-18
+
+### #27 — calibration: add an optional `next_level` section to the schema and renderer
+- **Labels:** enhancement
+- **Description:** The owner's first question on the first run was "what would have made it L4"; the schema had no slot for it.
+- **Resolution:** `next_level {level, differences, cheapest_step}` validated and rendered as "What L<n> would look like" after the evident level; `ladder.md` gains a per-rung "Reading the rung above" table; SKILL.md Phase 3 asks for it always. Tests added.
+- **Commit:** 418f7c1
+- **Closed:** 2026-09-18
+
 ## Open
 
 (none)
