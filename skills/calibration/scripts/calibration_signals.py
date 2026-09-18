@@ -61,7 +61,15 @@ UNWRAP_RE = re.compile(r"\.unwrap\(\)|\.expect\(")
 PANIC_RE = re.compile(r"\bpanic\(|\bpanic!\(|\bunreachable!\(|\bfatalError\(|\bos\.Exit\(")
 ERR_DISCARD_RE = re.compile(r",\s*_\s*:?=|^\s*_\s*=\s*\w", re.M)
 CUSTOM_EXC_RE = re.compile(r"class\s+\w+\s*\(\s*[\w.]*(?:Exception|Error)\s*\)|class\s+\w+\s+extends\s+[\w.]*(?:Error|Exception)\b|impl\s+(?:std::error::)?Error\s+for|#\[derive\([^)]*\bError\b")
-BOUNDARY_RE = re.compile(r"sys\.excepthook|\(err,\s*req,\s*res,\s*next\)|\brecover\(\)|uncaughtException|unhandledRejection|@ControllerAdvice|@ExceptionHandler|set_exception_handler|ErrorBoundary|catch_unwind|app\.exception_handler|@app\.errorhandler|add_exception_handler")
+# Boundary detection runs on code with string/comment content stripped, so the names below
+# must be identifiers or decorators, not strings. The two Node hooks are matched on the
+# call form instead because their event names are string arguments.
+BOUNDARY_RE = re.compile(r"sys\.excepthook\s*=|\(err,\s*req,\s*res,\s*next\)|\brecover\(\)|@ControllerAdvice|@ExceptionHandler|set_exception_handler\(|\bErrorBoundary\b|catch_unwind\(|app\.exception_handler\(|@app\.errorhandler\(|add_exception_handler\(")
+BOUNDARY_CALL_RE = re.compile(r"process\.on\(\s*['\"](?:uncaughtException|unhandledRejection)['\"]")
+COMMENT_RE = re.compile(r"//.*$|#.*$|/\*.*?\*/")
+STRING_RE = re.compile(r"`(?:\\.|[^`\\])*`|\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'")
+# TS/JS interface bodies: a method signature or a function-typed property marks it behavioral
+TS_METHOD_RE = re.compile(r"^\s*(?:readonly\s+)?\w+\??\s*(?:<[^>]*>)?\s*\([^)]*\)\s*:|^\s*(?:readonly\s+)?\w+\??\s*:\s*\([^)]*\)\s*=>", re.M)
 LOG_RE = re.compile(r"\b(?:log|logger|logging|LOG|_log|slog|zap|logrus|winston|pino|tracing)\b\s*[.:]+\s*(?:debug|info|warn|warning|error|exception|critical|fatal|Debug|Info|Warn|Error|Fatal)\s*[!(]|console\.(?:warn|error)\(")
 PRINT_RE = re.compile(r"(?<![.\w])print\(|console\.log\(|fmt\.Print(?:ln|f)?\(|println!\(|System\.out\.print|\bdbg!\(|\bpp\(|\bvar_dump\(")
 
@@ -178,10 +186,34 @@ def size_block(profile, metrics, files):
     }
 
 
+def _brace_body(text, start):
+    """Text of the {...} block that begins at or after `start`; '' if none."""
+    i = text.find("{", start)
+    if i < 0:
+        return ""
+    depth = 0
+    for j in range(i, len(text)):
+        if text[j] == "{":
+            depth += 1
+        elif text[j] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[i + 1:j]
+    return text[i + 1:]
+
+
 def indirection_block(files, manifests, source_loc):
     ifaces = {}  # name -> file
     impls = Counter()
     abc_names = set()
+    type_shapes = 0
+    implemented = set()
+    for f in files:
+        if f["is_test"]:
+            continue
+        if f["lang"] in ("typescript", "javascript"):
+            for m in IMPL_RE["typescript"].finditer(f["text"]):
+                implemented.update(re.split(r"[,\s]+", re.sub(r"<[^>]*>", "", m.group(1))))
     for f in files:
         if f["is_test"]:
             continue
@@ -197,6 +229,18 @@ def indirection_block(files, manifests, source_loc):
                 if re.search(r"\b(?:ABC|ABCMeta|Protocol)\b", bases) or "@abstractmethod" in body:
                     ifaces.setdefault(name, f["rel"])
                     abc_names.add(name)
+        elif lang in ("typescript", "javascript"):
+            # `interface Foo { a: string }` is a data shape, not an abstraction; only bodies
+            # with a method signature, abstract classes, or anything something `implements`
+            # count as behavioral interfaces
+            for m in pat.finditer(text):
+                name = m.group(1)
+                behavioral = ("abstract" in m.group(0) or name in implemented
+                              or bool(TS_METHOD_RE.search(_brace_body(text, m.end()))))
+                if behavioral:
+                    ifaces.setdefault(name, f["rel"])
+                else:
+                    type_shapes += 1
         else:
             for m in pat.finditer(text):
                 ifaces.setdefault(m.group(1), f["rel"])
@@ -229,6 +273,7 @@ def indirection_block(files, manifests, source_loc):
     return {
         "method": "heuristic",
         "interfaces": len(ifaces),
+        "type_shapes": type_shapes,
         "implementations": sum(impls.values()),
         "single_impl_interfaces": single[:CAP],
         "pattern_named_files": {"count": len(pattern_files), "top": pattern_files[:CAP]},
@@ -285,7 +330,8 @@ def error_block(files, metrics):
     boundary = []
     for f in src:
         for i, line in enumerate(f["text"].splitlines(), 1):
-            if BOUNDARY_RE.search(line):
+            code = COMMENT_RE.sub("", line)
+            if BOUNDARY_CALL_RE.search(code) or BOUNDARY_RE.search(STRING_RE.sub("", code)):
                 boundary.append(f"{f['rel']}:{i}")
                 if len(boundary) >= 5:
                     break

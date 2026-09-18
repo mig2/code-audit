@@ -114,6 +114,42 @@ def test_signals_without_git_or_metrics(tmp_path, monkeypatch):
     assert s["ai_assist_markers"]["ai_coauthor_commits"] is None
 
 
+def _ts_repo(root, boundary_line):
+    src = root / "src"
+    src.mkdir(parents=True)
+    (src / "types.ts").write_text("export interface Msg { id: string; text: string }\n")
+    (src / "port.ts").write_text(
+        "import { Msg } from './types';\nexport interface Port { send(msg: Msg): Promise<void>; }\n")
+    (src / "adapter.ts").write_text(
+        "import { Port } from './port';\n"
+        "// a rejection here only ever reaches process.on('unhandledRejection') — see #224\n"
+        f"{boundary_line}\n"
+        "export class Tg implements Port { async send(): Promise<void> {} }\n")
+    audit = root / ".audit" / "x"
+    audit.mkdir(parents=True)
+    (audit / "repo-profile.json").write_text(json.dumps({
+        "repo": str(root), "scope": ".", "is_service": True, "primary_language": "typescript",
+        "languages": [{"language": "typescript", "loc": 10}]}))
+    return audit
+
+
+def test_ts_data_shapes_and_commented_boundary_are_not_counted(tmp_path, monkeypatch):
+    audit = _ts_repo(tmp_path, "")
+    s = run(tmp_path, audit, monkeypatch)
+    ind = s["indirection"]
+    assert ind["interfaces"] == 1 and ind["type_shapes"] == 1
+    assert [x["name"] for x in ind["single_impl_interfaces"]] == ["Port"]
+    assert ind["single_impl_interfaces"][0]["implementations"] == 1
+    assert s["error_handling"]["error_boundary"] is False
+
+
+def test_ts_real_boundary_is_counted(tmp_path, monkeypatch):
+    audit = _ts_repo(tmp_path, "process.on('uncaughtException', (e) => { console.error(e); });")
+    s = run(tmp_path, audit, monkeypatch)
+    assert s["error_handling"]["error_boundary"] is True
+    assert s["error_handling"]["error_boundary_evidence"] == ["src/adapter.ts:3"]
+
+
 def test_no_manifests_yields_null_dependencies(tmp_path, monkeypatch):
     (tmp_path / "a.py").write_text("x = 1\n")
     audit = tmp_path / ".audit" / "x"
